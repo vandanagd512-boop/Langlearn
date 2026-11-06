@@ -1,14 +1,5 @@
 import { VideoLesson, VideoDurationCategory, VideoProficiencyLevel, VideoTopic } from '../types/video.types';
 
-// Curated reliable embed video streams
-const STREAM_PLAYLIST = [
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-];
-
 // Standard educational curriculum blueprints spanning from absolute beginner to fluent
 const CURRICULUM_BLUEPRINTS: {
   topic: VideoTopic;
@@ -293,29 +284,13 @@ const SUPPORTED_LANGUAGES_META = [
   { code: 'en', name: 'English', instructor: 'Sarah Jenkins', avatar: '👩‍🏫', gradient: 'from-blue-700 to-indigo-800' },
 ];
 
-const LANGUAGE_YOUTUBE_PLAYLISTS: Record<string, string[]> = {
-  kn: ['w2Uf2w8Y0tM', 'zTjS2_iY7sM', '_x1b5N7kQ2s', 'K4w4uE5uU7c', '8H_HhQ0FvE4', '1s4o1bZ5a_c'],
-  hi: ['2wXp-K_pZ-4', '9pB4m3hN11A', 'aF4f0w51yQo', 'k74Y_gFrWv8', 'b2C4v9X9a_Y', 'm0N9y8X7q1Z'],
-  te: ['4_r-7qU6jVo', 'Q1N7X5V5q8c', '1fT3kS4p0mQ', 'hK9_7qL2v0U', 'p0X4w8Y2v1Q', 'n5M9q2Z7k4P'],
-  ta: ['oX2lM2N_8bI', 'p9K8k0v51uM', '9_rP4w01v7Q', '3k_mQ7p2x5Y', 'm8N2x4Z1k7P', 'q9P4y2Z0v5M'],
-  ml: ['u4W7q2Z9v1P', 'h7N2x4Z1k7P', 'k9P4y2Z0v5M', 'v8N2x4Z1k7P', 'm4W7q2Z9v1P', 'b9P4y2Z0v5M'],
-  es: ['DAp_v7EH9AA', 'b1b5_s2W43E', '1qP4y2Z0v5M', '3_r-7qU6jVo', '8H_HhQ0FvE4', 'w2Uf2w8Y0tM'],
-  fr: ['ujDtm0hZyII', 'b2C4v9X9a_Y', 'k74Y_gFrWv8', 'aF4f0w51yQo', 'zTjS2_iY7sM', 'K4w4uE5uU7c'],
-  de: ['0w9lP2wP1aI', '9pB4m3hN11A', '2wXp-K_pZ-4', '_x1b5N7kQ2s', '1s4o1bZ5a_c', '8H_HhQ0FvE4'],
-  en: ['juKd26qkNAw', '2wXp-K_pZ-4', 'k74Y_gFrWv8', '9pB4m3hN11A', 'aF4f0w51yQo', 'w2Uf2w8Y0tM'],
-};
-
-// Build complete 100+ lesson database
+// Build complete 100+ native lesson database
 export const ALL_VIDEO_LESSONS: VideoLesson[] = [];
 
 let globalIndex = 0;
 for (const lang of SUPPORTED_LANGUAGES_META) {
-  const langYoutubeList = LANGUAGE_YOUTUBE_PLAYLISTS[lang.code] || LANGUAGE_YOUTUBE_PLAYLISTS['kn'];
-
   for (const bp of CURRICULUM_BLUEPRINTS) {
     globalIndex++;
-    const streamUrl = STREAM_PLAYLIST[globalIndex % STREAM_PLAYLIST.length];
-    const youtubeId = langYoutubeList[globalIndex % langYoutubeList.length];
 
     ALL_VIDEO_LESSONS.push({
       id: `vid-${lang.code}-${bp.level}-${globalIndex}`,
@@ -335,9 +310,7 @@ for (const lang of SUPPORTED_LANGUAGES_META) {
       instructorAvatar: lang.avatar,
       xpReward: bp.xp,
       gradient: lang.gradient,
-      embedType: 'youtube',
-      youtubeId: youtubeId,
-      videoUrl: streamUrl,
+      embedType: 'native',
       transcript: bp.transcriptGen(lang.name),
       keyVocabulary: bp.sampleWords(lang.name),
     });

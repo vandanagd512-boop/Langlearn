@@ -36,10 +36,9 @@ export interface VideoLesson {
   instructorAvatar: string;
   xpReward: number;
   gradient: string;
-  embedType: 'youtube' | 'stream';
-  youtubeId: string;
+  embedType: 'native';
   videoId?: string;
-  videoUrl: string;
+  videoUrl?: string;
   thumbnailUrl?: string;
   transcript: VideoTranscriptLine[];
   keyVocabulary: VideoVocabularyItem[];
