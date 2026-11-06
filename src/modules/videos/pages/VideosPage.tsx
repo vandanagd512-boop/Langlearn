@@ -215,10 +215,25 @@ export const VideosPage: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-800 text-xs">
-            <span className="font-bold text-amber-500 flex items-center gap-1">
-              <Zap className="w-3.5 h-3.5 fill-current" />
-              +{selectedLesson.xpReward} XP Reward
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-amber-500 flex items-center gap-1">
+                <Zap className="w-3.5 h-3.5 fill-current" />
+                +{selectedLesson.xpReward} XP Reward
+              </span>
+
+              <a
+                href={
+                  activeCustomId
+                    ? `https://www.youtube.com/watch?v=${activeCustomId}`
+                    : `https://www.youtube.com/results?search_query=Learn+${selectedLesson.languageName}+through+English+full+course`
+                }
+                target="_blank"
+                rel="noreferrer"
+                className="text-[10px] text-blue-600 dark:text-blue-400 font-bold hover:underline flex items-center gap-1"
+              >
+                ↗ Open on YouTube
+              </a>
+            </div>
 
             <Button
               size="sm"
