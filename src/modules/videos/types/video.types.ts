@@ -2,8 +2,6 @@ export type VideoDurationCategory = '2min' | '5min' | '10min' | '15min';
 
 export type VideoProficiencyLevel = 'beginner' | 'elementary' | 'intermediate' | 'fluent';
 
-export type VideoTopic = 'alphabet' | 'conversation' | 'food' | 'travel' | 'grammar' | 'slang' | 'culture';
-
 export interface VideoTranscriptLine {
   time: string;
   seconds: number;
@@ -30,7 +28,10 @@ export interface VideoLesson {
   levelLabel: string;
   languageCode: string;
   languageName: string;
-  topic: VideoTopic;
+  categoryId: number;
+  categoryTitle: string;
+  categoryIcon: string;
+  topic: string;
   topicLabel: string;
   instructor: string;
   instructorAvatar: string;

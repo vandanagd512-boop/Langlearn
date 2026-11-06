@@ -22,7 +22,7 @@ import {
   SkipBack,
   SkipForward,
 } from 'lucide-react';
-import { ALL_VIDEO_LESSONS } from '../data/videos.data';
+import { ALL_VIDEO_LESSONS, REAL_LIFE_CATEGORIES } from '../data/videos.data';
 import { VideoLesson, VideoDurationCategory, VideoProficiencyLevel } from '../types/video.types';
 import { SpeechService } from '@/services/speech/speech.service';
 import { useNotification } from '@/context/NotificationContext';
@@ -33,6 +33,7 @@ export const VideosPage: React.FC = () => {
   const { activeLanguageCode, setActiveLanguageCode } = useAppStore();
   const { notify } = useNotification();
 
+  const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
   const [selectedDuration, setSelectedDuration] = useState<string>('all');
   const [selectedLevel, setSelectedLevel] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -50,19 +51,21 @@ export const VideosPage: React.FC = () => {
 
   const [selectedLesson, setSelectedLesson] = useState<VideoLesson>(languageLessons[0]);
 
-  // Filtered list by search, level, duration
+  // Filtered list by category, search, level, duration
   const filteredVideos = useMemo(() => {
     return languageLessons.filter((vid) => {
+      const matchCat = selectedCategory === 'all' || vid.categoryId === selectedCategory;
       const matchDuration = selectedDuration === 'all' || vid.durationCategory === selectedDuration;
       const matchLevel = selectedLevel === 'all' || vid.level === selectedLevel;
       const matchSearch =
         !searchQuery.trim() ||
         vid.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         vid.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        vid.topicLabel.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchDuration && matchLevel && matchSearch;
+        vid.topicLabel.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        vid.categoryTitle.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchCat && matchDuration && matchLevel && matchSearch;
     });
-  }, [languageLessons, selectedDuration, selectedLevel, searchQuery]);
+  }, [languageLessons, selectedCategory, selectedDuration, selectedLevel, searchQuery]);
 
   // Sync selected lesson when activeLanguageCode changes
   const handleLanguageChange = (code: string) => {
@@ -627,6 +630,34 @@ export const VideosPage: React.FC = () => {
           <span className="text-[11px] text-blue-600 font-bold">A1 to C1</span>
         </div>
 
+        {/* 20 Real-Life Conversation Categories Carousel */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <button
+            onClick={() => setSelectedCategory('all')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition ${
+              selectedCategory === 'all'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+            }`}
+          >
+            🌟 All Categories ({languageLessons.length})
+          </button>
+          {REAL_LIFE_CATEGORIES.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition flex items-center gap-1.5 ${
+                selectedCategory === cat.id
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+              }`}
+            >
+              <span>{cat.icon}</span>
+              <span>{cat.id}. {cat.title}</span>
+            </button>
+          ))}
+        </div>
+
         {/* Search Input */}
         <div className="relative">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -634,7 +665,7 @@ export const VideosPage: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search lessons (e.g. Coffee, Auto, Grammar, Alphabet)..."
+            placeholder="Search all 130 topics (e.g. Doctor, Restaurant, UPI, Job Interview, Airport)..."
             className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           />
         </div>
