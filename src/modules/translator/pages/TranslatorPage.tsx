@@ -78,21 +78,28 @@ export const TranslatorPage: React.FC = () => {
     }
   }, [inputText, sourceLang, targetLang, notify]);
 
-  // Re-translate when language dropdown changes
+  // Auto-translate live when user types or changes language (debounced 350ms)
   useEffect(() => {
-    handleTranslate();
-  }, [sourceLang, targetLang]);
+    const handler = setTimeout(() => {
+      if (inputText.trim()) {
+        handleTranslate(inputText);
+      } else {
+        setOutputText('');
+      }
+    }, 350);
+    return () => clearTimeout(handler);
+  }, [inputText, sourceLang, targetLang, handleTranslate]);
 
   const handleSwap = () => {
     const prevSrc = sourceLang;
     const prevTgt = targetLang;
-    const prevInput = inputText;
-    const prevOutput = outputText;
+    // Strip romanized text in parentheses when swapping back
+    const cleanOutput = outputText.replace(/\(.*?\)/g, '').trim();
 
     setSourceLang(prevTgt);
     setTargetLang(prevSrc);
-    setInputText(prevOutput);
-    setOutputText(prevInput);
+    setInputText(cleanOutput || outputText);
+    setOutputText(inputText);
   };
 
   const handleCopy = () => {

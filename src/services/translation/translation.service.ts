@@ -1,10 +1,9 @@
 import { ITranslationService, TranslationRequest, TranslationResult } from './translation-service.interface';
-import { logger } from '../logging/logger.service';
 
 export class TranslationService implements ITranslationService {
   private cache = new Map<string, string>();
 
-  // Language mapping to standard BCP-47 and ISO codes
+  // Language mapping to ISO codes
   private langCodeMap: Record<string, string> = {
     kn: 'kn',
     hi: 'hi',
@@ -19,6 +18,7 @@ export class TranslationService implements ITranslationService {
     es: 'es',
     fr: 'fr',
     de: 'de',
+    ja: 'ja',
   };
 
   // Comprehensive multi-language vocabulary dictionary for instant offline lookup
@@ -55,6 +55,41 @@ export class TranslationService implements ITranslationService {
       'see you later': 'ನಂತರ ಸಿಗೋಣ (Nantara sigona)',
       'i love you': 'ನಾನು ನಿನ್ನನ್ನು ಪ್ರೀತಿಸುತ್ತೇನೆ (Naanu ninnannu preethisuthene)',
       'where are you going?': 'ನೀವು ಎಲ್ಲಿಗೆ ಹೋಗುತ್ತಿದ್ದೀರಿ? (Neevu ellige hoguttiddiri?)',
+      'what are you doing?': 'ನೀವು ಏನು ಮಾಡುತ್ತಿದ್ದೀರಿ? (Neevu enu maaduttiddiri?)',
+      'what are you doing': 'ನೀವು ಏನು ಮಾಡುತ್ತಿದ್ದೀರಿ? (Neevu enu maaduttiddiri?)',
+      'i want water': 'ನನಗೆ ನೀರು ಬೇಕು (Nanage neeru beku)',
+      'i am learning kannada': 'ನಾನು ಕನ್ನಡ ಕಲಿಯುತ್ತಿದ್ದೇನೆ (Naanu Kannada kaliyuttiddene)',
+      'where is the hotel?': 'ಹೋಟೆಲ್ ಎಲ್ಲಿದೆ? (Hotel ellide?)',
+      'good': 'ಒಳ್ಳೆಯದು (Olleyaadu)',
+      'bad': 'ಕೆಟ್ಟದ್ದು (Kettaddu)',
+      'friend': 'ಸ್ನೇಹಿತ (Snehita)',
+      'mother': 'ಅಮ್ಮ (Amma)',
+      'father': 'ಅಪ್ಪ (Appa)',
+      'brother': 'ಅಣ್ಣ (Anna)',
+      'sister': 'ಅಕ್ಕ (Akka)',
+    },
+    // Kannada -> English
+    'kn:en': {
+      'ನಮಸ್ಕಾರ': 'Hello / Greetings',
+      'ಹಲೋ': 'Hello',
+      'ನೀವು ಹೇಗಿದ್ದೀರಿ?': 'How are you?',
+      'ನೀವು ಹೇಗಿದ್ದೀರಿ': 'How are you?',
+      'ನಾನು ಚೆನ್ನಾಗಿದ್ದೇನೆ': 'I am fine',
+      'ನಿಮ್ಮ ಹೆಸರೇನು?': 'What is your name?',
+      'ನಿಮ್ಮ ಹೆಸರೇನು': 'What is your name?',
+      'ಧನ್ಯವಾದಗಳು': 'Thank you',
+      'ದಯವಿಟ್ಟು': 'Please',
+      'ಸುಸ್ವಾಗತ': 'Welcome',
+      'ಶುಭೋದಯ': 'Good morning',
+      'ಶುಭ ರಾತ್ರಿ': 'Good night',
+      'ನೀರು': 'Water',
+      'ಊಟ': 'Food',
+      'ಕಾಫಿ': 'Coffee',
+      'ಚಹಾ': 'Tea',
+      'ಸಹಾಯ': 'Help',
+      'ಹೌದು': 'Yes',
+      'ಇಲ್ಲ': 'No',
+      'ಮತ್ತೆ ಸಿಗೋಣ': 'Goodbye / See you again',
     },
     // English -> Hindi
     'en:hi': {
@@ -64,6 +99,7 @@ export class TranslationService implements ITranslationService {
       'how are you?': 'आप कैसे हैं? (Aap kaise hain?)',
       'i am fine': 'मैं ठीक हूँ (Main theek hoon)',
       'what is your name?': 'आपका नाम क्या है? (Aapka naam kya hai?)',
+      'what is your name': 'आपका नाम क्या है? (Aapka naam kya hai?)',
       'my name is': 'मेरा नाम है (Mera naam hai)',
       'thank you': 'धन्यवाद (Dhanyavaad)',
       'thank you very much': 'बहुत बहुत धन्यवाद (Bahut bahut dhanyavaad)',
@@ -81,6 +117,7 @@ export class TranslationService implements ITranslationService {
       'no': 'नहीं (Nahi)',
       'goodbye': 'अलविदा (Alvida)',
       'where are you going?': 'आप कहाँ जा रहे हैं? (Aap kahan ja rahe hain?)',
+      'what are you doing?': 'आप क्या कर रहे हैं? (Aap kya kar rahe hain?)',
     },
     // English -> Tamil
     'en:ta': {
@@ -99,73 +136,39 @@ export class TranslationService implements ITranslationService {
     // English -> Telugu
     'en:te': {
       'hello': 'నమస్కారం (Namaskaram)',
-      'how are you?': 'మీరు ఎలా ఉన్నారు? (Meeru ela unnaru?)',
       'how are you': 'మీరు ఎలా ఉన్నారు? (Meeru ela unnaru?)',
+      'how are you?': 'మీరు ఎలా ఉన్నారు? (Meeru ela unnaru?)',
+      'i am fine': 'నేను బాగున్నాను (Nenu bagunnanu)',
+      'what is your name?': 'మీ పేరు ఏమిటి? (Mee peru emiti?)',
       'thank you': 'ధన్యవాదాలు (Dhanyavadalu)',
-      'welcome': 'స్వాగతం (Swagatham)',
-      'water': 'నీళ్ళు (Neellu)',
+      'water': 'నీరు / మంచి నీళ్ళు (Neeru)',
       'food': 'భోజనం (Bhojanam)',
-      'how much is this?': 'దీని ధర ఎంత? (Deeni dhara entha?)',
-      'goodbye': 'వెళ్లొస్తాను (Vellosthanu)',
+      'coffee': 'కాఫీ (Coffee)',
+      'goodbye': 'వెళ్ళివస్తాను (Velli vasthanu)',
     },
-    // English -> Malayalam
-    'en:ml': {
-      'hello': 'നമസ്കാരം (Namaskaram)',
-      'how are you?': 'സുഖമാണോ? (Sukhamano?)',
-      'thank you': 'നന്ദി (Nandi)',
-      'welcome': 'സ്വാഗതം (Swagatham)',
-      'water': 'വെള്ളം (Vellam)',
-      'food': 'ഭക്ഷണം (Bhakshanam)',
-      'goodbye': 'വിട (Vida)',
-    },
-    // English -> Marathi
-    'en:mr': {
-      'hello': 'नमस्कार (Namaskar)',
-      'how are you?': 'तुम्ही कसे आहात? (Tumhi kase ahat?)',
-      'thank you': 'धन्यवाद (Dhanyavaad)',
-      'welcome': 'स्वागत आहे (Swagat ahe)',
-      'water': 'पाणी (Paani)',
-      'food': 'जेवण (Jevan)',
-      'goodbye': 'पुन्हा भेटू (Pha bhetu)',
-    },
-    // English -> Bengali
-    'en:bn': {
-      'hello': 'নমস্কার (Nomoshkar)',
-      'how are you?': 'আপনি কেমন আছেন? (Apni kemon achhen?)',
-      'thank you': 'ধন্যবাদ (Dhonnobad)',
-      'welcome': 'স্বাগতম (Shwagotom)',
-      'water': 'জল (Jol)',
-      'food': 'খাবার (Khabar)',
-      'goodbye': 'বিদায় (Biday)',
-    },
-    // English -> Gujarati
-    'en:gu': {
-      'hello': 'નમસ્તે (Namaste)',
-      'how are you?': 'તમે કેમ છો? (Tame kem chho?)',
-      'thank you': 'આભાર (Aabhar)',
-      'welcome': 'સ્વાગત છે (Swagat chhe)',
-      'water': 'પાણી (Paani)',
-      'food': 'ખોરાક (Khorak)',
-      'goodbye': 'આવજો (Aavjo)',
-    },
-    // English -> Punjabi
-    'en:pa': {
-      'hello': 'ਸਤਿ ਸ੍ਰੀ ਅਕਾਲ (Sat Sri Akal)',
-      'how are you?': 'ਤੁਹਾਡਾ ਕੀ ਹਾਲ ਹੈ? (Tuhada ki haal hai?)',
-      'thank you': 'ਧੰਨਵਾਦ (Dhanvaad)',
-      'welcome': 'ਜੀ ਆਇਆਂ ਨੂੰ (Ji Aayan Nu)',
-      'water': 'ਪਾਣੀ (Paani)',
-      'food': 'ਖਾਣਾ (Khaana)',
-      'goodbye': 'ਅਲਵਿਦਾ (Alvida)',
+    // English -> Spanish
+    'en:es': {
+      'hello': 'Hola',
+      'how are you': '¿Cómo estás?',
+      'how are you?': '¿Cómo estás?',
+      'thank you': 'Gracias',
+      'please': 'Por favor',
+      'water': 'Agua',
+      'food': 'Comida',
+      'good morning': 'Buenos días',
+      'good night': 'Buenas noches',
+      'goodbye': 'Adiós',
     },
   };
 
   /**
    * Main Translation Engine:
    * 1. Check local cache
-   * 2. Try online MyMemory live translation API
-   * 3. Fallback to comprehensive offline dictionary
-   * 4. Fallback to intelligent word-by-word token translation
+   * 2. Try Google Translate API (Global, fast, handles all languages without 500-char limits)
+   * 3. Try MyMemory API with strict error protection (never output "query length limit" errors)
+   * 4. Try Lingva API fallback
+   * 5. Match against Comprehensive offline dictionary
+   * 6. Intelligent token-level translation
    */
   public async translate(request: TranslationRequest): Promise<TranslationResult> {
     const { text, sourceLanguage, targetLanguage } = request;
@@ -202,56 +205,119 @@ export class TranslationService implements ITranslationService {
       };
     }
 
-    logger.info('TranslationService', `Translating [${sourceLanguage} -> ${targetLanguage}]: "${cleanText.slice(0, 40)}"`);
+    const srcCode = this.langCodeMap[sourceLanguage] || sourceLanguage;
+    const tgtCode = this.langCodeMap[targetLanguage] || targetLanguage;
 
-    // 1. Check offline dictionary for exact phrase match
+    // 1. Check offline dictionary for instant exact phrase match
     const dictKey = `${sourceLanguage}:${targetLanguage}`;
-    if (this.offlineDictionary[dictKey]?.[cleanText.toLowerCase()]) {
-      const match = this.offlineDictionary[dictKey][cleanText.toLowerCase()];
-      this.cache.set(cacheKey, match);
+    const dictMatch = this.offlineDictionary[dictKey]?.[cleanText.toLowerCase()];
+    if (dictMatch) {
+      this.cache.set(cacheKey, dictMatch);
       return {
         originalText: text,
-        translatedText: match,
+        translatedText: dictMatch,
         sourceLanguage,
         targetLanguage,
-        confidence: 0.98,
+        confidence: 0.99,
       };
     }
 
-    // 2. Attempt real live translation via open MyMemory Neural Translation API
+    // 2. Primary Engine: Google Translate GTX Web API
     try {
-      const srcCode = this.langCodeMap[sourceLanguage] || sourceLanguage;
-      const tgtCode = this.langCodeMap[targetLanguage] || targetLanguage;
-      const apiUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanText)}&langpair=${srcCode}|${tgtCode}`;
-
+      const gtxUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${srcCode}&tl=${tgtCode}&dt=t&q=${encodeURIComponent(cleanText)}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
 
-      const response = await fetch(apiUrl, { signal: controller.signal });
+      const res = await fetch(gtxUrl, { signal: controller.signal });
       clearTimeout(timeoutId);
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data && data.responseData && data.responseData.translatedText) {
-          const liveTranslation = data.responseData.translatedText;
-          // Verify it didn't return an error message
-          if (!liveTranslation.includes('MYMEMORY WARNING') && !liveTranslation.includes('PLEASE SELECT TWO DISTINCT')) {
-            this.cache.set(cacheKey, liveTranslation);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && Array.isArray(data[0])) {
+          const translated = data[0]
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .map((item: any) => (item && item[0] ? item[0] : ''))
+            .join('')
+            .trim();
+
+          if (translated && !translated.toLowerCase().includes('query length')) {
+            this.cache.set(cacheKey, translated);
             return {
               originalText: text,
-              translatedText: liveTranslation,
+              translatedText: translated,
               sourceLanguage,
               targetLanguage,
-              confidence: 0.95,
+              confidence: 0.98,
             };
           }
         }
       }
-    } catch (err) {
-      logger.warn('TranslationService', 'Live API unreachable, using intelligent offline synthesis', err);
+    } catch {
+      // Proceed to secondary engine
     }
 
-    // 3. Fallback: Word-by-word tokenized translation using dictionary
+    // 3. Secondary Engine: MyMemory Neural Translation (Safe 400-char truncated chunks)
+    try {
+      const safeText = cleanText.slice(0, 400);
+      const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(safeText)}&langpair=${srcCode}|${tgtCode}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      const res = await fetch(myMemoryUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.responseStatus === 200 && data.responseData && data.responseData.translatedText) {
+          const t: string = data.responseData.translatedText.trim();
+          // STRICT FILTER: Never output any API error / query limit message
+          const isError = /query length|limit exceed|mymemory warning|quota|invalid|please select/i.test(t);
+          if (!isError && t !== safeText) {
+            this.cache.set(cacheKey, t);
+            return {
+              originalText: text,
+              translatedText: t,
+              sourceLanguage,
+              targetLanguage,
+              confidence: 0.92,
+            };
+          }
+        }
+      }
+    } catch {
+      // Proceed to tertiary engine
+    }
+
+    // 4. Tertiary Engine: Lingva open mirror API
+    try {
+      const lingvaUrl = `https://lingva.ml/api/v1/${srcCode}/${tgtCode}/${encodeURIComponent(cleanText.slice(0, 300))}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const res = await fetch(lingvaUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.translation) {
+          const t: string = data.translation.trim();
+          if (t && !/error|limit/i.test(t)) {
+            this.cache.set(cacheKey, t);
+            return {
+              originalText: text,
+              translatedText: t,
+              sourceLanguage,
+              targetLanguage,
+              confidence: 0.90,
+            };
+          }
+        }
+      }
+    } catch {
+      // Proceed to dictionary
+    }
+
+    // 5. Fallback: Intelligent Tokenized Translation
     const words = cleanText.split(/\s+/);
     const translatedTokens: string[] = [];
     const directDict = this.offlineDictionary[dictKey] || {};
@@ -259,7 +325,6 @@ export class TranslationService implements ITranslationService {
     for (const w of words) {
       const normalizedWord = w.toLowerCase().replace(/[.,!?;:]/g, '');
       if (directDict[normalizedWord]) {
-        // Strip romanized text in brackets if present for inline flow
         const cleanMatch = directDict[normalizedWord].split('(')[0].trim();
         translatedTokens.push(cleanMatch);
       } else {
@@ -267,31 +332,16 @@ export class TranslationService implements ITranslationService {
       }
     }
 
-    let resultText = translatedTokens.join(' ');
-    // If entire sentence had no matches, provide contextual natural output
-    if (resultText === cleanText) {
-      const naturalFallbacks: Record<string, string> = {
-        kn: `${cleanText} (ಕನ್ನಡ ಅನುವಾದ ಲಭ್ಯವಿದೆ)`,
-        hi: `${cleanText} (हिंदी अनुवाद)`,
-        ta: `${cleanText} (தமிழ் மொழிபெயர்ப்பு)`,
-        te: `${cleanText} (తెలుగు అనువాదం)`,
-        ml: `${cleanText} (മലയാളം തർജ്ജമ)`,
-        mr: `${cleanText} (मराठी भाषांतर)`,
-        bn: `${cleanText} (বাংলা অনুবাদ)`,
-        gu: `${cleanText} (ગુજરાતી અનુવાદ)`,
-        pa: `${cleanText} (ਪੰਜਾਬੀ ਅਨੁਵਾਦ)`,
-      };
-      resultText = naturalFallbacks[targetLanguage] || cleanText;
-    }
-
-    this.cache.set(cacheKey, resultText);
+    const tokenResult = translatedTokens.join(' ');
+    // Cache and return
+    this.cache.set(cacheKey, tokenResult);
 
     return {
       originalText: text,
-      translatedText: resultText,
+      translatedText: tokenResult,
       sourceLanguage,
       targetLanguage,
-      confidence: 0.88,
+      confidence: 0.85,
     };
   }
 
@@ -304,6 +354,7 @@ export class TranslationService implements ITranslationService {
     if (/[\u0980-\u09FF]/.test(text)) return 'bn'; // Bengali
     if (/[\u0A80-\u0AFF]/.test(text)) return 'gu'; // Gujarati
     if (/[\u0A00-\u0A7F]/.test(text)) return 'pa'; // Punjabi
+    if (/[\u3040-\u30FF\u4E00-\u9FAF]/.test(text)) return 'ja'; // Japanese
     return 'en';
   }
 }

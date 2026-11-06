@@ -37,6 +37,7 @@ export interface VideoLesson {
   xpReward: number;
   gradient: string;
   embedType: 'youtube' | 'stream';
+  youtubeId: string;
   videoId?: string;
   videoUrl: string;
   thumbnailUrl?: string;

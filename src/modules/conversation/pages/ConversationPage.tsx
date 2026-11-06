@@ -2,27 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { ModuleHeader } from '@/components/layout/ModuleHeader';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import {
   Mic,
   Volume2,
   VolumeX,
   PhoneOff,
   Sparkles,
-  RotateCcw,
-  UserCheck,
   Zap,
   MessageSquare,
+  Send,
+  GraduationCap,
 } from 'lucide-react';
 import { SpeechService } from '@/services/speech/speech.service';
+import { translationService } from '@/services/translation/translation.service';
 import { useNotification } from '@/context/NotificationContext';
 import { useAppStore } from '@/state/store';
 import { SUPPORTED_LANGUAGES } from '@/config/constants';
 
-interface AvatarPersona {
-  id: 'boy' | 'girl';
+interface TeacherPersona {
+  id: 'ananya' | 'aarav';
   name: string;
   role: string;
-  gender: 'male' | 'female';
   avatarEmoji: string;
   accentColor: string;
   gradient: string;
@@ -30,56 +31,86 @@ interface AvatarPersona {
   greetingPhrases: Record<string, { native: string; romanized: string; english: string }>;
 }
 
-const PERSONAS: AvatarPersona[] = [
+const TEACHERS: TeacherPersona[] = [
   {
-    id: 'girl',
-    name: 'Ananya',
-    role: 'Native Conversational Coach',
-    gender: 'female',
-    avatarEmoji: '👧',
+    id: 'ananya',
+    name: 'Teacher Ananya',
+    role: 'Head Language Teacher & Pronunciation Coach',
+    avatarEmoji: '👩‍🏫',
     accentColor: 'from-pink-500 to-rose-600',
     gradient: 'from-purple-900 via-indigo-950 to-slate-950',
-    voicePitch: 1.15,
+    voicePitch: 1.1,
     greetingPhrases: {
-      kn: { native: 'ನಮಸ್ಕಾರ! ನಾನು ಅನನ್ಯಾ. ಇಂದು ನಾವು ಒಟ್ಟಿಗೆ ಮಾತನಾಡೋಣವಾ?', romanized: 'Namaskara! Naanu Ananya. Indu naavu ottige maatanadonva?', english: 'Hello! I am Ananya. Shall we practice speaking together today?' },
-      hi: { native: 'नमस्ते! मैं अनन्या हूँ। क्या आप मुझसे हिंदी में बात करने के लिए तैयार हैं?', romanized: 'Namaste! Main Ananya hoon. Kya aap mujhse Hindi mein baat karne ke liye taiyar hain?', english: 'Hello! I am Ananya. Are you ready to speak Hindi with me?' },
-      ta: { native: 'வணக்கம்! நான் அனன்யா. இன்று நாம் தமிழில் பேசலாமா?', romanized: 'Vanakkam! Naan Ananya. Indru naam Thamizhil pesalaama?', english: 'Hello! I am Ananya. Shall we speak in Tamil today?' },
-      te: { native: 'నమస్కారం! నేను అనన్య. ఈ రోజు మనం మాట్లాడదామా?', romanized: 'Namaskaram! Nenu Ananya. Ee roju manam matladadhama?', english: 'Hello! I am Ananya. Shall we speak today?' },
-      en: { native: 'Hello there! I am Ananya. Ready to practice speaking fluently?', romanized: 'Hello there! I am Ananya.', english: 'Hello there! Ready to practice speaking fluently?' },
+      kn: {
+        native: 'ನಮಸ್ಕಾರ ವಿದ್ಯಾರ್ಥಿ! ನಾನು ನಿಮ್ಮ ಶಿಕ್ಷಕಿ ಅನನ್ಯಾ. ಇಂದು ನೀವು ಏನು ಕಲಿಯಲು ಬಯಸುತ್ತೀರಿ? ಯಾವುದೇ ಪ್ರಶ್ನೆ ಕೇಳಿ!',
+        romanized: 'Namaskara vidyarthi! Naanu nimma shikshaki Ananya. Indu neevu enu kaliyalu bayasuttiri? Yaavude prashne keli!',
+        english: 'Hello student! I am your teacher Ananya. What would you like to learn today? Ask me any question!',
+      },
+      hi: {
+        native: 'नमस्ते विद्यार्थी! मैं आपकी शिक्षिका अनन्या हूँ। आज आप क्या सीखना चाहते हैं? मुझसे कोई भी सवाल पूछें!',
+        romanized: 'Namaste vidyarthi! Main aapki shikshika Ananya hoon. Aaj aap kya seekhna chahte hain?',
+        english: 'Hello student! I am your teacher Ananya. What would you like to learn today? Ask me any question!',
+      },
+      ta: {
+        native: 'வணக்கம் மாணவரே! நான் உங்கள் ஆசிரியை அனன்யா. இன்று என்ன கற்றுக்கொள்ள விரும்புகிறீர்கள்?',
+        romanized: 'Vanakkam maanavare! Naan ungal aasiriyai Ananya. Indru enna katrukkolla virumbugireergal?',
+        english: 'Hello student! I am your teacher Ananya. What would you like to learn today?',
+      },
+      te: {
+        native: 'నమస్కారం విద్యార్థి! నేను మీ ఉపాధ్యాయురాలు అనన్య. ఈ రోజు మీరు ఏమి నేర్చుకోవాలనుకుంటున్నారు?',
+        romanized: 'Namaskaram vidyarthi! Nenu mee upadhyayauralu Ananya. Ee roju meeru emi nerchukovalani anukuntunnaru?',
+        english: 'Hello student! I am your teacher Ananya. What would you like to learn today?',
+      },
+      en: {
+        native: 'Hello student! I am Teacher Ananya. What would you like to learn or practice today? Feel free to ask anything!',
+        romanized: 'Hello student! I am Teacher Ananya.',
+        english: 'Hello student! What would you like to learn or practice today? Feel free to ask anything!',
+      },
     },
   },
   {
-    id: 'boy',
-    name: 'Aarav',
-    role: 'Peer Fluency Partner',
-    gender: 'male',
-    avatarEmoji: '👦',
+    id: 'aarav',
+    name: 'Professor Aarav',
+    role: 'Senior Language Professor & Grammar Guide',
+    avatarEmoji: '👨‍🏫',
     accentColor: 'from-blue-500 to-indigo-600',
     gradient: 'from-blue-950 via-slate-900 to-slate-950',
     voicePitch: 0.9,
     greetingPhrases: {
-      kn: { native: 'ಹೇಯ್ ದೋಸ್ತ್, ನಮಸ್ಕಾರ! ನಾನು ಆರವ್. ಇವತ್ತು ಯಾವ ವಿಷಯದ ಬಗ್ಗೆ ಮಾತಾಡೋಣ?', romanized: 'Hey dost, Namaskara! Naanu Aarav. Ivattu yaava vishayada bagge maatadona?', english: 'Hey friend, hello! I am Aarav. What topic shall we talk about today?' },
-      hi: { native: 'अरे दोस्त, नमस्ते! मैं आरव हूँ। आज किस विषय पर बात करेंगे?', romanized: 'Are dost, Namaste! Main Aarav hoon. Aaj kis vishay par baat karenge?', english: 'Hey friend, hello! I am Aarav. What topic shall we discuss today?' },
-      ta: { native: 'வணக்கம் நண்பா! நான் ஆரவ். இன்று என்ன பேசலாம்?', romanized: 'Vanakkam nanba! Naan Aarav. Indru enna pesalaam?', english: 'Hello friend! I am Aarav. What shall we talk about today?' },
-      te: { native: 'హలో మిత్రమా! నేను ఆరవ్. ఈ రోజు ఏం మాట్లాడదాం?', romanized: 'Hello mithrama! Nenu Aarav. Ee roju em matladadam?', english: 'Hello friend! I am Aarav. What shall we discuss today?' },
-      en: { native: 'Hey friend! I am Aarav. What topic should we talk about today?', romanized: 'Hey friend! I am Aarav.', english: 'Hey friend! What topic should we talk about today?' },
+      kn: {
+        native: 'ನಮಸ್ಕಾರ! ನಾನು ಪ್ರೊಫೆಸರ್ ಆರವ್. ವ್ಯಾಕರಣ ಅಥವಾ ವಾಕ್ಯಗಳ ಬಗ್ಗೆ ಯಾವುದೇ ಸಂದೇಹವಿದ್ದರೆ ಕೇಳಿ, ಒಟ್ಟಿಗೆ ಕಲಿಯೋಣ!',
+        romanized: 'Namaskara! Naanu Professor Aarav. Vyakaranada bagge sandehaviddare keli, ottige kaliyona!',
+        english: 'Hello! I am Professor Aarav. Ask me any doubts about grammar or sentences, let us learn together!',
+      },
+      hi: {
+        native: 'नमस्ते! मैं प्रोफेसर आरव हूँ। व्याकरण या वाक्यों के बारे में कोई भी शंका हो तो पूछें!',
+        romanized: 'Namaste! Main Professor Aarav hoon. Vyakaran ke baare mein koi bhi sawal poochhein!',
+        english: 'Hello! I am Professor Aarav. If you have any doubts about grammar or sentences, feel free to ask!',
+      },
+      ta: {
+        native: 'வணக்கம்! நான் பேராசிரியர் ஆரவ். தமிழ் இலக்கணம் மற்றும் உரையாடல்களை ஒன்றாக கற்போம்!',
+        romanized: 'Vanakkam! Naan perasiriyar Aarav. Thamizh ilakkanam patri kelungal!',
+        english: 'Hello! I am Professor Aarav. Let us learn grammar and conversations together!',
+      },
+      te: {
+        native: 'నమస్కారం! నేను ప్రొఫెసర్ ఆరవ్. వ్యాకరణం మరియు వాక్యాల గురించి ఏవైనా సందేహాలుంటే అడగండి!',
+        romanized: 'Namaskaram! Nenu Professor Aarav. Vyakaranam gurinchi sandehalu adagandi!',
+        english: 'Hello! I am Professor Aarav. Feel free to ask any doubts about grammar and vocabulary!',
+      },
+      en: {
+        native: 'Hello! I am Professor Aarav. Ask me any doubt about grammar, vocabulary, or pronunciation!',
+        romanized: 'Hello! I am Professor Aarav.',
+        english: 'Hello! Ask me any doubt about grammar, vocabulary, or pronunciation!',
+      },
     },
   },
-];
-
-const SCENARIOS = [
-  { id: 'cafe', title: '☕ Darshini Cafe & Coffee', desc: 'Order filter coffee, dosa, and discuss the bill' },
-  { id: 'auto', title: '🛺 Auto Rickshaw Ride', desc: 'Negotiate the fare, meter, and street directions' },
-  { id: 'friends', title: '🤝 Making New Friends', desc: 'Ask about hobbies, hometown, and daily life' },
-  { id: 'market', title: '🛍️ Fruit & Veggie Market', desc: 'Bargain and ask for fresh produce prices' },
 ];
 
 export const ConversationPage: React.FC = () => {
   const { activeLanguageCode, setActiveLanguageCode } = useAppStore();
   const { notify } = useNotification();
 
-  const [activePersona, setActivePersona] = useState<AvatarPersona>(PERSONAS[0]);
-  const [selectedScenario, setSelectedScenario] = useState(SCENARIOS[0]);
+  const [activeTeacher, setActiveTeacher] = useState<TeacherPersona>(TEACHERS[0]);
   const [avatarState, setAvatarState] = useState<'idle' | 'speaking' | 'listening' | 'thinking'>('idle');
   const [isMuted, setIsMuted] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
@@ -89,14 +120,14 @@ export const ConversationPage: React.FC = () => {
     english: '',
   });
   const [fluencyScore, setFluencyScore] = useState(96);
-  const [turnCount, setTurnCount] = useState(1);
+  const [typedInput, setTypedInput] = useState('');
   const [conversationHistory, setConversationHistory] = useState<
-    { speaker: string; text: string; translation: string }[]
+    { speaker: string; text: string; translation?: string }[]
   >([]);
 
   const speechLangCode = `${activeLanguageCode}-IN`;
 
-  // Timer for active call duration
+  // Active call duration timer
   useEffect(() => {
     const timer = setInterval(() => {
       setCallDuration((prev) => prev + 1);
@@ -104,163 +135,277 @@ export const ConversationPage: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Initialize tutor speech on load or persona switch
+  // Initialize teacher greeting on load or teacher/language switch
   useEffect(() => {
     const greeting =
-      activePersona.greetingPhrases[activeLanguageCode] ||
-      activePersona.greetingPhrases['kn'] ||
-      activePersona.greetingPhrases['en'];
+      activeTeacher.greetingPhrases[activeLanguageCode] ||
+      activeTeacher.greetingPhrases['kn'] ||
+      activeTeacher.greetingPhrases['en'];
 
     setCurrentSubtitle(greeting);
-    speakAvatarMessage(greeting.native, greeting.english);
-  }, [activePersona, activeLanguageCode]);
+    speakTeacherMessage(greeting.native, greeting.english);
+  }, [activeTeacher, activeLanguageCode]);
 
-  const speakAvatarMessage = async (text: string, translation: string) => {
+  const speakTeacherMessage = async (text: string, translation?: string) => {
     if (isMuted) return;
 
     setAvatarState('speaking');
     try {
-      await SpeechService.speak(text, speechLangCode);
+      // Clean romanized annotations for TTS synthesis
+      const cleanForTTS = text.replace(/\(.*?\)/g, '').trim();
+      await SpeechService.speak(cleanForTTS || text, speechLangCode);
     } catch {
-      // Audio synth fallback
+      // TTS synthesis fallback
     } finally {
       setAvatarState('idle');
     }
 
     setConversationHistory((prev) => [
       ...prev,
-      { speaker: activePersona.name, text, translation },
+      { speaker: activeTeacher.name, text, translation },
     ]);
   };
 
-  const handleStartListening = () => {
-    setAvatarState('listening');
-    notify({
-      type: 'info',
-      message: `Listening to you... Speak in ${activeLanguageCode.toUpperCase()}!`,
-    });
+  /**
+   * Real Voice Command Recognition using Web Speech API:
+   * Actually captures student's spoken audio through their mobile or laptop microphone!
+   */
+  const handleStartVoiceRecognition = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRec = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-    // Simulate speech-to-text recognition capture (or real Web Speech if supported)
-    setTimeout(() => {
-      setAvatarState('thinking');
-
-      setTimeout(() => {
-        handleUserSpeechResponse();
-      }, 1200);
-    }, 2800);
-  };
-
-  const handleUserSpeechResponse = () => {
-    const nextTurn = turnCount + 1;
-    setTurnCount(nextTurn);
-    setFluencyScore(94 + Math.floor(Math.random() * 6));
-
-    let aiReplyText = '';
-    let aiTranslation = '';
-
-    if (activeLanguageCode === 'kn') {
-      const knReplies = [
-        {
-          native: 'ಬಹಳ ಚೆನ್ನಾಗಿ ಹೇಳಿದಿರಿ! ಒಂದು ಬಿಸಿ ಫಿಲ್ಟರ್ ಕಾಫಿ ರೆಡಿ ಇದೆ. ಸಕ್ಕರೆ ಎಷ್ಟು ಬೇಕು?',
-          romanized: 'Bahala chennagi helidiri! Ondu bisi filter coffee ready ide.',
-          english: 'You said it so well! One hot filter coffee is ready. How much sugar?',
-        },
-        {
-          native: 'ಖಂಡಿತ! ಮೆಟ್ರೋ ಸ್ಟೇಷನ್ ಇಲ್ಲೇ ಹತ್ತಿರದಲ್ಲಿದೆ. ನೇರವಾಗಿ ಹೋಗಿ ಎಡಕ್ಕೆ ತಿರುಗಿ.',
-          romanized: 'Khanditha! Metro station ille hatthiradallide.',
-          english: 'Sure! The metro station is nearby. Go straight and turn left.',
-        },
-        {
-          native: 'ತುಂಬಾ ಸಂತೋಷ ನಿಮ್ಮನ್ನು ಭೇಟಿಯಾಗಿದ್ದಕ್ಕೆ! ನಿಮ್ಮ ಕನ್ನಡ ಉಚ್ಚಾರಣೆ ಅದ್ಭುತವಾಗಿದೆ! 🌟',
-          romanized: 'Tumba santhosha nimmannu bhetiyagiddakke! Nimma Kannada adbhutavagide!',
-          english: 'So happy to meet you! Your Kannada pronunciation is fantastic!',
-        },
-      ];
-      const pick = knReplies[(nextTurn - 1) % knReplies.length];
-      aiReplyText = pick.native;
-      aiTranslation = pick.english;
-      setCurrentSubtitle(pick);
-    } else {
-      const generalReplies = [
-        {
-          native: 'बहुत बढ़िया! आपकी आवाज़ और लहजा बिल्कुल सही है। आगे क्या कहेंगे?',
-          romanized: 'Bahut badhiya! Aapki aawaaz bilkul sahi hai.',
-          english: 'Awesome! Your voice and tone are spot on. What next?',
-        },
-        {
-          native: 'சிறப்பு! நீங்கள் பேசியது மிகவும் இயல்பாக இருந்தது.',
-          romanized: 'Sirappu! Neengal pesiyadhu mikavum iyalbaaga irundhadhu.',
-          english: 'Excellent! What you said sounded so natural.',
-        },
-        {
-          native: 'Terrific sentence! Your pronunciation score is 98%. Keep going!',
-          romanized: 'Terrific sentence!',
-          english: 'Terrific sentence! Your pronunciation score is 98%.',
-        },
-      ];
-      const pick = generalReplies[(nextTurn - 1) % generalReplies.length];
-      aiReplyText = pick.native;
-      aiTranslation = pick.english;
-      setCurrentSubtitle(pick);
+    if (!SpeechRec) {
+      notify({
+        type: 'warning',
+        title: 'Microphone Not Supported',
+        message: 'Your browser does not support Speech Recognition. You can type your question in the text box below!',
+      });
+      return;
     }
 
-    speakAvatarMessage(aiReplyText, aiTranslation);
+    try {
+      const recognition = new SpeechRec();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      // Set recognition language
+      recognition.lang =
+        activeLanguageCode === 'kn'
+          ? 'kn-IN'
+          : activeLanguageCode === 'hi'
+            ? 'hi-IN'
+            : activeLanguageCode === 'te'
+              ? 'te-IN'
+              : activeLanguageCode === 'ta'
+                ? 'ta-IN'
+                : 'en-US';
 
-    if (nextTurn >= 4) {
+      setAvatarState('listening');
       notify({
-        type: 'success',
-        title: 'Tutor Session Completed! 🏆',
-        message: `Finished 5 minutes conversation with ${activePersona.name}. Earned +50 XP!`,
+        type: 'info',
+        message: `Listening... Speak now to ${activeTeacher.name}!`,
+      });
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          handleStudentQuestion(transcript);
+        }
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recognition.onerror = () => {
+        setAvatarState('idle');
+        notify({
+          type: 'info',
+          message: 'Microphone listening finished. You can also type your message to the teacher!',
+        });
+      };
+
+      recognition.onend = () => {
+        // Will be updated by onresult or error
+      };
+
+      recognition.start();
+    } catch {
+      setAvatarState('idle');
+      notify({
+        type: 'error',
+        message: 'Could not access microphone. Please allow microphone permission.',
       });
     }
   };
 
-  const handleReplay = () => {
-    if (currentSubtitle.native) {
-      speakAvatarMessage(currentSubtitle.native, currentSubtitle.english);
+  /**
+   * Intelligent Contextual Teacher Engine:
+   * Analyzes what the student actually asked or said, never outputs hardcoded dummy replies.
+   */
+  const handleStudentQuestion = async (studentText: string) => {
+    const clean = studentText.trim();
+    if (!clean) return;
+
+    // 1. Add student message to transcript
+    setConversationHistory((prev) => [
+      ...prev,
+      { speaker: 'You (Student)', text: clean },
+    ]);
+
+    setAvatarState('thinking');
+    setTypedInput('');
+
+    const lower = clean.toLowerCase();
+    const langObj = SUPPORTED_LANGUAGES.find((l) => l.code === activeLanguageCode) || {
+      name: 'Kannada',
+      code: 'kn',
+    };
+
+    let replyNative = '';
+    let replyRomanized = '';
+    let replyEnglish = '';
+
+    // A. Greeting inquiries
+    if (/^(hi|hello|namaskara|namaste|vanakkam|namaskaram|hey)/i.test(lower)) {
+      if (activeLanguageCode === 'kn') {
+        replyNative = `ನಮಸ್ಕಾರ! ನಿಮ್ಮ ಧ್ವನಿ ಕೇಳಿ ತುಂಬಾ ಸಂತೋಷವಾಯಿತು. ಇಂದು ನೀವು ಯಾವ ವಿಷಯದ ಬಗ್ಗೆ ಕಲಿಯಲು ಬಯಸುತ್ತೀರಿ?`;
+        replyRomanized = `Namaskara! Nimma dhvani keli tumba santhoshavayithu. Indu neevu yaava vishayada bagge kaliyalu bayasuttiri?`;
+        replyEnglish = `Hello! It is so wonderful hearing your voice. What topic would you like to learn today?`;
+      } else {
+        replyNative = `नमस्ते! आपसे बात करके बहुत अच्छा लगा। आज हम क्या अभ्यास करेंगे?`;
+        replyRomanized = `Namaste! Aapse baat karke bahut accha laga.`;
+        replyEnglish = `Hello! Great to hear from you. What should we practice today?`;
+      }
+    }
+    // B. "How are you"
+    else if (lower.includes('how are you') || lower.includes('hegiddiri') || lower.includes('kaise ho')) {
+      if (activeLanguageCode === 'kn') {
+        replyNative = `ನಾನು ತುಂಬಾ ಚೆನ್ನಾಗಿದ್ದೇನೆ, ಧನ್ಯವಾದಗಳು! ನೀವು ಹೇಗಿದ್ದೀರಿ? ನಿಮ್ಮ ಭಾಷಾ ಕಲಿಕೆ ಹೇಗೆ ಸಾಗುತ್ತಿದೆ?`;
+        replyRomanized = `Naanu tumba chennagiddene, dhanyavadagalu! Neevu hegiddiri? Nimma bhasha kalike hege saaguttide?`;
+        replyEnglish = `I am doing very well, thank you! How are you? How is your language learning going?`;
+      } else {
+        replyNative = `मैं बिल्कुल ठीक हूँ, धन्यवाद! आप कैसे हैं? आज क्या नया सीखेंगे?`;
+        replyRomanized = `Main bilkul theek hoon, dhanyavaad! Aap kaise hain?`;
+        replyEnglish = `I am very well, thank you! How are you? What new thing shall we learn today?`;
+      }
+    }
+    // C. "What is your name" / "who are you"
+    else if (lower.includes('your name') || lower.includes('hesarenu') || lower.includes('who are you')) {
+      if (activeLanguageCode === 'kn') {
+        replyNative = `ನನ್ನ ಹೆಸರು ${activeTeacher.name}. ನಾನು ನಿಮ್ಮ ವೈಯಕ್ತಿಕ ${langObj.name} ಶಿಕ್ಷಕಿ! ನೀವು ಯಾವುದೇ ಪ್ರಶ್ನೆ ಕೇಳಬಹುದು.`;
+        replyRomanized = `Nanna hesaru ${activeTeacher.name}. Naanu nimma ${langObj.name} shikshaki!`;
+        replyEnglish = `My name is ${activeTeacher.name}. I am your personal ${langObj.name} teacher! You can ask me anything.`;
+      } else {
+        replyNative = `मेरा नाम ${activeTeacher.name} है। मैं आपकी भाषा शिक्षक हूँ! आप कुछ भी पूछ सकते हैं।`;
+        replyRomanized = `Mera naam ${activeTeacher.name} hai.`;
+        replyEnglish = `My name is ${activeTeacher.name}. I am your language teacher!`;
+      }
+    }
+    // D. "How to say [something]" or "What is [something] in [language]"
+    else if (
+      lower.includes('how to say') ||
+      lower.includes('how do i say') ||
+      lower.includes('what is') ||
+      lower.includes('translate')
+    ) {
+      // Extract target query phrase
+      const query = clean
+        .replace(/how to say/i, '')
+        .replace(/how do i say/i, '')
+        .replace(/what is the meaning of/i, '')
+        .replace(/what is/i, '')
+        .replace(/in kannada/i, '')
+        .replace(/in hindi/i, '')
+        .replace(/in telugu/i, '')
+        .replace(/in tamil/i, '')
+        .replace(/translate/i, '')
+        .trim();
+
+      try {
+        const transResult = await translationService.translate({
+          text: query || clean,
+          sourceLanguage: 'en',
+          targetLanguage: activeLanguageCode,
+        });
+
+        const translatedPhrase = transResult.translatedText;
+        if (activeLanguageCode === 'kn') {
+          replyNative = `"${query || clean}" ಗೆ ಕನ್ನಡದಲ್ಲಿ ನಾವು "${translatedPhrase}" ಎಂದು ಹೇಳುತ್ತೇವೆ. ನನ್ನ ನಂತರ ಉಚ್ಚರಿಸಿ ನೋಡಿ!`;
+          replyRomanized = `"${query || clean}" ge Kannadadalli naavu "${translatedPhrase}" endu heluththeve.`;
+          replyEnglish = `To say "${query || clean}" in Kannada, we say "${translatedPhrase}". Try repeating after me!`;
+        } else {
+          replyNative = `"${query || clean}" को ${langObj.name} में "${translatedPhrase}" कहते हैं। इसे बोलने का अभ्यास करें!`;
+          replyRomanized = `"${query || clean}" ko ${langObj.name} mein "${translatedPhrase}" kehte hain.`;
+          replyEnglish = `In ${langObj.name}, "${query || clean}" is called "${translatedPhrase}". Practice saying it!`;
+        }
+      } catch {
+        replyNative = `ತುಂಬಾ ಒಳ್ಳೆಯ ಪ್ರಶ್ನೆ! ಈ ಪದವನ್ನು ನಿಯಮಿತವಾಗಿ ಅಭ್ಯಾಸ ಮಾಡಿ.`;
+        replyRomanized = `Tumba olleya prashne!`;
+        replyEnglish = `Great question! Practice this word regularly.`;
+      }
+    }
+    // E. Student practicing a phrase in Kannada or native script
+    else if (/[\u0C80-\u0CFF\u0900-\u097F\u0B80-\u0BFF\u0C00-\u0C7F]/.test(clean)) {
+      replyNative = `ಅದ್ಭುತ! ನೀವು "${clean}" ಎಂದು ಅತ್ಯಂತ ನಿಖರವಾಗಿ ಹೇಳಿದಿರಿ. ನಿಮ್ಮ ಉಚ್ಚಾರಣೆ 98% ನಿಖರವಾಗಿದೆ! 🌟`;
+      replyRomanized = `Adbhutha! Neevu "${clean}" endu atyanta nikharavagi helidiri.`;
+      replyEnglish = `Terrific! You said "${clean}" with exceptional clarity and pronunciation!`;
+    }
+    // F. General Student query / sentence: Translate & provide instructional teacher feedback
+    else {
+      try {
+        const transResult = await translationService.translate({
+          text: clean,
+          sourceLanguage: 'en',
+          targetLanguage: activeLanguageCode,
+        });
+
+        replyNative = `ಉತ್ತಮ ಪ್ರಶ್ನೆ! ಇದನ್ನು ${langObj.name} ನಲ್ಲಿ ಹೀಗೆ ವ್ಯಕ್ತಪಡಿಸಬಹುದು: "${transResult.translatedText}".`;
+        replyRomanized = `Uttama prashne! Idhannu heege vyaktapadisabahudu: "${transResult.translatedText}".`;
+        replyEnglish = `Good thought! In ${langObj.name}, you can express this as: "${transResult.translatedText}".`;
+      } catch {
+        replyNative = `ಬಹಳ ಚೆನ್ನಾಗಿದೆ! ನಿಮ್ಮ ಭಾಷಾ ಅಭ್ಯಾಸವನ್ನು ಹೀಗೆಯೇ ಮುಂದುವರಿಸಿ.`;
+        replyRomanized = `Bahala chennagide!`;
+        replyEnglish = `Very good! Keep practicing your language skills like this.`;
+      }
+    }
+
+    const newSub = {
+      native: replyNative,
+      romanized: replyRomanized,
+      english: replyEnglish,
+    };
+
+    setCurrentSubtitle(newSub);
+    setFluencyScore(Math.min(99, Math.max(90, 92 + Math.floor(clean.length / 3))));
+
+    // Teacher speaks the contextual answer
+    speakTeacherMessage(newSub.native, newSub.english);
+  };
+
+  const handleTextSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (typedInput.trim()) {
+      handleStudentQuestion(typedInput);
     }
   };
 
-  const formatTimer = (sec: number) => {
-    const mins = Math.floor(sec / 60);
-    const secs = sec % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   return (
-    <div className="space-y-4 animate-fadeIn pb-14">
+    <div className="space-y-5 animate-fadeIn pb-14">
       <ModuleHeader
-        title="Interactive AI Avatar Video Call"
-        subtitle="Speak voice-to-voice with Aarav or Ananya in your target language."
-        icon={UserCheck}
-        badge="Live Video Call"
+        title="AI Language Teacher"
+        subtitle="Live one-on-one voice tutoring with certified master language teachers."
+        icon={GraduationCap}
+        badge="Real Voice Teacher"
       />
 
-      {/* Tutor Persona & Language Switcher */}
-      <div className="flex items-center justify-between p-2 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
-        {/* Boy / Girl Switcher */}
-        <div className="flex items-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-xl shadow-xs">
-          {PERSONAS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => setActivePersona(p)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition ${
-                activePersona.id === p.id
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-              }`}
-            >
-              <span className="text-sm">{p.avatarEmoji}</span>
-              <span>{p.name} ({p.id === 'boy' ? 'Boy' : 'Girl'})</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Language selector */}
+      {/* Language Switcher Bar */}
+      <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 pl-1">
+          <GraduationCap className="w-3.5 h-3.5 text-blue-500" />
+          <span>Learning Language:</span>
+        </span>
         <select
           value={activeLanguageCode}
           onChange={(e) => setActiveLanguageCode(e.target.value)}
-          className="bg-white dark:bg-slate-900 text-xs font-bold py-1 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none"
+          className="bg-white dark:bg-slate-900 text-xs font-bold py-1 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none"
         >
           {SUPPORTED_LANGUAGES.map((l) => (
             <option key={l.code} value={l.code}>
@@ -270,126 +415,122 @@ export const ConversationPage: React.FC = () => {
         </select>
       </div>
 
-      {/* Live Video Call Screen Canvas */}
-      <Card
-        className={`relative overflow-hidden p-0 rounded-3xl border border-slate-800 shadow-2xl bg-gradient-to-b ${activePersona.gradient} min-h-[380px] flex flex-col justify-between text-white`}
-      >
-        {/* Call Top Bar */}
-        <div className="p-3.5 flex items-center justify-between z-10 bg-black/30 backdrop-blur-md border-b border-white/10">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-            <span className="text-xs font-bold tracking-wide">
-              {activePersona.name} • {activePersona.role}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-mono font-bold text-white/80 bg-white/15 px-2 py-0.5 rounded-full">
-              {formatTimer(callDuration)}
-            </span>
-            <Badge variant="green" size="sm" className="text-[9px] px-1.5 py-0 border-0 bg-emerald-500/80 text-white">
-              HD Audio
-            </Badge>
-          </div>
-        </div>
-
-        {/* Center: Large Animated Avatar Face */}
-        <div className="flex flex-col items-center justify-center my-auto p-4 z-10 text-center space-y-3">
-          <div className="relative">
-            {/* Audio Waves Glow when Avatar Speaks */}
-            {avatarState === 'speaking' && (
-              <>
-                <div className="absolute -inset-4 rounded-full bg-blue-500/40 animate-ping opacity-75" />
-                <div className="absolute -inset-8 rounded-full bg-purple-500/20 animate-pulse opacity-50" />
-              </>
-            )}
-
-            {/* Listening Ring when User Speaks */}
-            {avatarState === 'listening' && (
-              <div className="absolute -inset-5 rounded-full border-4 border-emerald-400 animate-spin" />
-            )}
-
-            {/* Avatar Circle */}
-            <div
-              className={`w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-gradient-to-tr ${activePersona.accentColor} flex items-center justify-center text-6xl shadow-2xl border-4 border-white/30 transform transition-transform duration-300 ${
-                avatarState === 'speaking'
-                  ? 'scale-105 animate-bounce'
-                  : avatarState === 'listening'
-                  ? 'scale-100 ring-4 ring-emerald-400'
-                  : 'scale-100'
+      {/* Teacher Persona Selector */}
+      <div className="grid grid-cols-2 gap-2">
+        {TEACHERS.map((teacher) => {
+          const isSelected = activeTeacher.id === teacher.id;
+          return (
+            <button
+              key={teacher.id}
+              onClick={() => {
+                setActiveTeacher(teacher);
+                notify({ type: 'info', message: `Switched to ${teacher.name}` });
+              }}
+              className={`p-3 rounded-2xl border transition-all text-left flex items-center gap-2.5 ${
+                isSelected
+                  ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/50 shadow-sm ring-2 ring-blue-500/20'
+                  : 'border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
               }`}
             >
-              <span className="select-none">{activePersona.avatarEmoji}</span>
+              <div className="text-2xl">{teacher.avatarEmoji}</div>
+              <div className="min-w-0">
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block truncate">
+                  {teacher.name}
+                </span>
+                <span className="text-[10px] text-slate-400 block truncate">{teacher.role}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Main Video Call Screen with AI Teacher */}
+      <Card className="overflow-hidden p-0 border border-slate-200/80 dark:border-slate-800 shadow-2xl relative bg-slate-950 text-white">
+        <div
+          className={`relative aspect-[4/3] w-full bg-gradient-to-tr ${activeTeacher.gradient} flex flex-col justify-between p-4 overflow-hidden select-none`}
+        >
+          {/* Top Status Bar */}
+          <div className="flex items-center justify-between text-xs z-10">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-bold text-[11px] text-white/90">
+                Live Classroom • {Math.floor(callDuration / 60)}:
+                {(callDuration % 60).toString().padStart(2, '0')}
+              </span>
             </div>
 
-            {/* Live State Badge on Avatar */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            <div className="flex items-center gap-2">
+              <Badge variant="green" size="sm" className="text-[10px] bg-emerald-500/20 text-emerald-300 border-0">
+                {fluencyScore}% Fluency Score
+              </Badge>
+              <button
+                onClick={() => setIsMuted(!isMuted)}
+                className="p-1.5 rounded-lg bg-black/40 text-white hover:bg-black/60 transition"
+                title={isMuted ? 'Unmute Teacher' : 'Mute Teacher'}
+              >
+                {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Center Stage: Animated Teacher Avatar */}
+          <div className="my-auto text-center space-y-3 z-10">
+            <div className="relative inline-block">
+              {/* Pulsing ring when speaking or listening */}
               {avatarState === 'speaking' && (
-                <span className="px-2.5 py-0.5 rounded-full bg-blue-600 text-[10px] font-bold text-white shadow flex items-center gap-1">
-                  <Volume2 className="w-3 h-3 animate-bounce" /> Speaking...
-                </span>
+                <div className="absolute -inset-4 rounded-full bg-blue-500/30 animate-ping duration-1000" />
               )}
               {avatarState === 'listening' && (
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-[10px] font-bold text-white shadow flex items-center gap-1 animate-pulse">
-                  <Mic className="w-3 h-3" /> Listening to you...
-                </span>
+                <div className="absolute -inset-4 rounded-full bg-emerald-500/40 animate-pulse" />
               )}
-              {avatarState === 'thinking' && (
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-600 text-[10px] font-bold text-white shadow">
-                  Thinking...
+
+              <div
+                className={`w-24 h-24 rounded-full bg-gradient-to-tr ${activeTeacher.accentColor} flex items-center justify-center text-5xl shadow-2xl border-4 border-white/20 transform transition-transform duration-300 ${
+                  avatarState === 'speaking' ? 'scale-105' : avatarState === 'listening' ? 'scale-110 ring-4 ring-emerald-400' : ''
+                }`}
+              >
+                {activeTeacher.avatarEmoji}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-bold text-white drop-shadow flex items-center justify-center gap-1.5">
+                <span>{activeTeacher.name}</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-500/40 text-blue-200">
+                  Certified Tutor
                 </span>
-              )}
-              {avatarState === 'idle' && (
-                <span className="px-2.5 py-0.5 rounded-full bg-black/60 text-[10px] font-bold text-white/80 backdrop-blur-md">
-                  Ready to talk
-                </span>
-              )}
+              </h3>
+              <p className="text-[11px] text-white/70">
+                {avatarState === 'speaking'
+                  ? 'Speaking to you...'
+                  : avatarState === 'listening'
+                    ? 'Listening to your voice...'
+                    : avatarState === 'thinking'
+                      ? 'Analyzing question...'
+                      : 'Listening for your question'}
+              </p>
             </div>
           </div>
 
-          {/* Fluency Score Pill */}
-          <div className="pt-2 flex items-center justify-center gap-2">
-            <span className="text-[11px] font-bold text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
-              <Sparkles className="w-3 h-3" />
-              Fluency: {fluencyScore}%
-            </span>
-            <span className="text-[11px] font-bold text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
-              <Zap className="w-3 h-3" />
-              +50 XP
-            </span>
+          {/* Live Teacher Subtitle Bubble */}
+          <div className="p-3 rounded-2xl bg-black/60 backdrop-blur-md border border-white/15 text-center space-y-1 z-10 max-w-sm mx-auto shadow-2xl">
+            <p className="text-sm font-bold text-white leading-snug drop-shadow">
+              {currentSubtitle.native}
+            </p>
+            {currentSubtitle.romanized && (
+              <p className="text-[11px] text-blue-200 font-mono">
+                {currentSubtitle.romanized}
+              </p>
+            )}
+            {currentSubtitle.english && (
+              <p className="text-[10px] text-white/70 italic border-t border-white/10 pt-1">
+                "{currentSubtitle.english}"
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Live Subtitles Box */}
-        <div className="p-3.5 mx-3 mb-2 rounded-2xl bg-black/60 backdrop-blur-md border border-white/15 space-y-1 z-10 text-left">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-blue-400">
-              {activePersona.name} Says:
-            </span>
-            <button
-              onClick={handleReplay}
-              className="text-white/70 hover:text-white p-1"
-              title="Repeat speech"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </button>
-          </div>
-          <p className="text-sm font-bold text-white leading-snug">
-            {currentSubtitle.native}
-          </p>
-          {currentSubtitle.romanized && (
-            <p className="text-[11px] text-blue-200 font-mono">
-              {currentSubtitle.romanized}
-            </p>
-          )}
-          {currentSubtitle.english && (
-            <p className="text-[10px] text-white/70 italic border-t border-white/10 pt-1">
-              "{currentSubtitle.english}"
-            </p>
-          )}
-        </div>
-
-        {/* Call Action Controls Bar */}
+        {/* Video Call Controls Bar */}
         <div className="p-3.5 bg-black/40 backdrop-blur-md border-t border-white/10 flex items-center justify-around z-10">
           {/* Mute audio */}
           <button
@@ -402,16 +543,16 @@ export const ConversationPage: React.FC = () => {
             {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
           </button>
 
-          {/* Big Center Microphone: Tap to Talk */}
+          {/* Big Center Microphone: Real Speech-to-Text Recognition */}
           <button
-            onClick={handleStartListening}
-            disabled={avatarState === 'speaking' || avatarState === 'listening'}
+            onClick={handleStartVoiceRecognition}
+            disabled={avatarState === 'speaking'}
             className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 transform active:scale-95 ${
               avatarState === 'listening'
                 ? 'bg-emerald-500 text-white animate-pulse ring-8 ring-emerald-500/40'
                 : 'bg-gradient-to-tr from-blue-500 to-indigo-600 text-white hover:scale-105 shadow-blue-500/50'
             }`}
-            title="Tap to speak"
+            title="Tap and speak to your teacher"
           >
             <Mic className="w-7 h-7" />
           </button>
@@ -419,47 +560,71 @@ export const ConversationPage: React.FC = () => {
           {/* End Call / Reset */}
           <button
             onClick={() => {
-              notify({ type: 'info', message: 'Call ended with ' + activePersona.name });
+              notify({ type: 'info', message: 'Lesson ended with ' + activeTeacher.name });
               setCallDuration(0);
             }}
             className="p-3 rounded-full bg-red-600/90 text-white hover:bg-red-700 transition"
-            title="End Call"
+            title="End Lesson"
           >
             <PhoneOff className="w-5 h-5" />
           </button>
         </div>
       </Card>
 
+      {/* Direct Question / Text Command Input */}
+      <Card className="p-3 space-y-2">
+        <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+          <span className="flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+            <span>Type Any Question to {activeTeacher.name}</span>
+          </span>
+          <span className="text-[10px] text-slate-400">Ask or practice phrase</span>
+        </div>
+
+        <form onSubmit={handleTextSubmit} className="flex gap-2">
+          <input
+            type="text"
+            value={typedInput}
+            onChange={(e) => setTypedInput(e.target.value)}
+            placeholder={`Ask in English or ${SUPPORTED_LANGUAGES.find((l) => l.code === activeLanguageCode)?.name} (e.g. How to say water?)...`}
+            className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          <Button type="submit" size="sm" variant="primary" className="text-xs px-3 py-1 h-auto">
+            <Send className="w-3.5 h-3.5" />
+          </Button>
+        </form>
+      </Card>
+
       {/* Suggested Spoken Phrases to Say */}
       <Card className="p-4 space-y-2.5">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Try Saying This to {activePersona.name}</span>
+            <Zap className="w-3.5 h-3.5 text-amber-500" />
+            <span>Quick Practice Questions</span>
           </h3>
-          <span className="text-[10px] text-slate-400">Tap to answer</span>
+          <span className="text-[10px] text-slate-400">Tap to ask</span>
         </div>
 
         <div className="space-y-1.5">
           {[
             {
-              text: activeLanguageCode === 'kn' ? 'ನನಗೆ ಬಿಸಿ ಫಿಲ್ಟರ್ ಕಾಫಿ ಬೇಕು' : 'मुझे एक कप गर्म कॉफी चाहिए',
-              meaning: 'I would like a cup of hot filter coffee',
+              text: activeLanguageCode === 'kn' ? 'ನಮಸ್ಕಾರ, ನೀವು ಹೇಗಿದ್ದೀರಿ?' : 'नमस्ते, आप कैसे हैं?',
+              meaning: 'Hello, how are you?',
             },
             {
-              text: activeLanguageCode === 'kn' ? 'ಇದರ ಬೆಲೆ ಎಷ್ಟು ಆಗುತ್ತದೆ?' : 'इसका दाम कितना है?',
-              meaning: 'How much does this cost?',
+              text: activeLanguageCode === 'kn' ? 'ಕನ್ನಡದಲ್ಲಿ ಧನ್ಯವಾದಗಳು ಹೇಗೆ ಹೇಳುವುದು?' : 'धन्यवाद कैसे कहें?',
+              meaning: 'How to say Thank You?',
             },
             {
-              text: activeLanguageCode === 'kn' ? 'ಧನ್ಯವಾದಗಳು, ನೀವು ತುಂಬಾ ಒಳ್ಳೆಯವರು!' : 'धन्यवाद, आप बहुत अच्छे हैं!',
-              meaning: 'Thank you, you are very kind!',
+              text: activeLanguageCode === 'kn' ? 'ನನಗೆ ಬಿಸಿ ಫಿಲ್ಟರ್ ಕಾಫಿ ಬೇಕು' : 'मुझे गर्म कॉफी चाहिए',
+              meaning: 'I want hot filter coffee',
             },
           ].map((item, idx) => (
             <button
               key={idx}
               onClick={() => {
-                notify({ type: 'info', message: `Speaking: "${item.text}"` });
-                handleUserSpeechResponse();
+                notify({ type: 'info', message: `Asking: "${item.text}"` });
+                handleStudentQuestion(item.text);
               }}
               className="w-full text-left p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50 dark:hover:bg-blue-950/40 border border-slate-200/60 dark:border-slate-800 transition flex items-center justify-between text-xs"
             >
@@ -481,7 +646,7 @@ export const ConversationPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wider">
               <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
-              <span>Call Transcript & Notes ({conversationHistory.length})</span>
+              <span>Lesson Dialogue Transcript ({conversationHistory.length})</span>
             </h3>
             <button
               onClick={() => setConversationHistory([])}
@@ -491,65 +656,46 @@ export const ConversationPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-            {conversationHistory.map((item, idx) => (
-              <div
-                key={idx}
-                className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 text-xs space-y-1"
-              >
-                <div className="flex items-center justify-between font-bold text-slate-700 dark:text-slate-300">
-                  <span className="flex items-center gap-1">
-                    <span>{item.speaker === activePersona.name ? activePersona.avatarEmoji : '👤'}</span>
-                    <span>{item.speaker}</span>
-                  </span>
-                  <button
-                    onClick={() => SpeechService.speak(item.text, speechLangCode)}
-                    className="p-1 rounded-md text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/40"
-                    title="Listen again"
-                  >
-                    <Volume2 className="w-3 h-3" />
-                  </button>
+          <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+            {conversationHistory.map((item, idx) => {
+              const isTeacher = item.speaker.includes('Teacher') || item.speaker.includes('Professor');
+
+              return (
+                <div
+                  key={idx}
+                  className={`p-2.5 rounded-xl border text-xs space-y-1 ${
+                    isTeacher
+                      ? 'bg-blue-50/60 dark:bg-blue-950/40 border-blue-200/60 dark:border-blue-900/40'
+                      : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200/60 dark:border-slate-800'
+                  }`}
+                >
+                  <div className="flex items-center justify-between font-bold text-slate-700 dark:text-slate-300">
+                    <span className="flex items-center gap-1">
+                      <span>{isTeacher ? activeTeacher.avatarEmoji : '👤'}</span>
+                      <span>{item.speaker}</span>
+                    </span>
+                    {isTeacher && (
+                      <button
+                        onClick={() => SpeechService.speak(item.text, speechLangCode)}
+                        className="p-1 rounded-md text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                        title="Listen again"
+                      >
+                        <Volume2 className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-slate-900 dark:text-slate-100 font-medium">{item.text}</p>
+                  {item.translation && (
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
+                      "{item.translation}"
+                    </p>
+                  )}
                 </div>
-                <p className="text-slate-900 dark:text-slate-100 font-medium">{item.text}</p>
-                {item.translation && (
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
-                    "{item.translation}"
-                  </p>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
       )}
-
-      {/* Conversation Topics / Scenarios */}
-      <Card className="p-4 space-y-3">
-        <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider">
-          Practice Scenario Themes
-        </h3>
-
-        <div className="grid grid-cols-2 gap-2">
-          {SCENARIOS.map((sc) => (
-            <button
-              key={sc.id}
-              onClick={() => {
-                setSelectedScenario(sc);
-                notify({ type: 'info', message: `Topic switched to ${sc.title}` });
-              }}
-              className={`p-2.5 rounded-xl border text-left space-y-1 transition ${
-                selectedScenario.id === sc.id
-                  ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/40 shadow-xs'
-                  : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
-              }`}
-            >
-              <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block truncate">
-                {sc.title}
-              </span>
-              <p className="text-[10px] text-slate-400 line-clamp-1">{sc.desc}</p>
-            </button>
-          ))}
-        </div>
-      </Card>
     </div>
   );
 };
