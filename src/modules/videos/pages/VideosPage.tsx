@@ -49,11 +49,26 @@ export const VideosPage: React.FC = () => {
     return list.length > 0 ? list : ALL_VIDEO_LESSONS.filter((v) => v.languageCode === 'kn');
   }, [activeLanguageCode]);
 
-  const [selectedLesson, setSelectedLesson] = useState<VideoLesson>(languageLessons[0]);
+  const fallbackLesson: VideoLesson = languageLessons[0] || ALL_VIDEO_LESSONS[0];
+  const [selectedLesson, setSelectedLesson] = useState<VideoLesson>(fallbackLesson);
+
+  // Sync selected lesson when activeLanguageCode changes
+  useEffect(() => {
+    if (selectedLesson && selectedLesson.languageCode !== activeLanguageCode) {
+      const match = ALL_VIDEO_LESSONS.find((v) => v.languageCode === activeLanguageCode);
+      if (match) {
+        setSelectedLesson(match);
+        setActiveSentenceIndex(0);
+      }
+    }
+  }, [activeLanguageCode, selectedLesson]);
+
+  const activeLesson: VideoLesson = selectedLesson || fallbackLesson;
 
   // Filtered list by category, search, level, duration
   const filteredVideos = useMemo(() => {
-    return languageLessons.filter((vid) => {
+    const baseList = languageLessons.length > 0 ? languageLessons : ALL_VIDEO_LESSONS;
+    return baseList.filter((vid) => {
       const matchCat = selectedCategory === 'all' || vid.categoryId === selectedCategory;
       const matchDuration = selectedDuration === 'all' || vid.durationCategory === selectedDuration;
       const matchLevel = selectedLevel === 'all' || vid.level === selectedLevel;
@@ -79,9 +94,9 @@ export const VideosPage: React.FC = () => {
     setActiveSentenceIndex(0);
   };
 
-  const totalSentences = selectedLesson.transcript.length;
+  const totalSentences = activeLesson?.transcript?.length || 0;
   const currentSentence =
-    selectedLesson.transcript[activeSentenceIndex] || selectedLesson.transcript[0];
+    activeLesson?.transcript?.[activeSentenceIndex] || activeLesson?.transcript?.[0];
 
   // Auto-scroll active transcript line into view
   useEffect(() => {
@@ -103,7 +118,7 @@ export const VideosPage: React.FC = () => {
     }
 
     let isCancelled = false;
-    const speechCode = `${selectedLesson.languageCode}-IN`;
+    const speechCode = `${activeLesson.languageCode}-IN`;
 
     // Dynamic display time calculation: ~65ms per character, clamped between 3.5s and 9s
     const textLen = currentSentence?.text?.length || 30;
@@ -164,11 +179,11 @@ export const VideosPage: React.FC = () => {
     return () => {
       isCancelled = true;
     };
-  }, [activeSentenceIndex, isPlaying, selectedLesson.id, playbackRate, isMuted]);
+  }, [activeSentenceIndex, isPlaying, activeLesson.id, playbackRate, isMuted]);
 
   // Auto-advance to next video in curriculum
   const handleAutoAdvanceNextVideo = () => {
-    const currentIndex = filteredVideos.findIndex((v) => v.id === selectedLesson.id);
+    const currentIndex = filteredVideos.findIndex((v) => v.id === activeLesson.id);
     const nextIndex = (currentIndex + 1) % filteredVideos.length;
     const nextLesson = filteredVideos[nextIndex];
 
@@ -191,7 +206,7 @@ export const VideosPage: React.FC = () => {
 
   const handlePrevVideo = () => {
     SpeechService.stop();
-    const currentIndex = filteredVideos.findIndex((v) => v.id === selectedLesson.id);
+    const currentIndex = filteredVideos.findIndex((v) => v.id === activeLesson.id);
     const prevIndex = (currentIndex - 1 + filteredVideos.length) % filteredVideos.length;
     const prevLesson = filteredVideos[prevIndex];
 
@@ -256,17 +271,17 @@ export const VideosPage: React.FC = () => {
   };
 
   const handleCompleteLesson = () => {
-    if (!completedVideos.includes(selectedLesson.id)) {
-      setCompletedVideos((prev) => [...prev, selectedLesson.id]);
+    if (!completedVideos.includes(activeLesson.id)) {
+      setCompletedVideos((prev) => [...prev, activeLesson.id]);
       notify({
         type: 'success',
         title: 'Lesson Mastered! 🏆',
-        message: `Earned +${selectedLesson.xpReward} XP for completing "${selectedLesson.title}".`,
+        message: `Earned +${activeLesson.xpReward} XP for completing "${activeLesson.title}".`,
       });
     }
   };
 
-  const isCompleted = completedVideos.includes(selectedLesson.id);
+  const isCompleted = completedVideos.includes(activeLesson.id);
   const progressPercent = Math.min(
     100,
     Math.round(((activeSentenceIndex + 1) / totalSentences) * 100)
@@ -306,16 +321,16 @@ export const VideosPage: React.FC = () => {
           {!isPlaying ? (
             /* HD Video Cover Poster when Paused */
             <div
-              className={`absolute inset-0 bg-gradient-to-tr ${selectedLesson.gradient} flex flex-col justify-between p-4 cursor-pointer`}
+              className={`absolute inset-0 bg-gradient-to-tr ${activeLesson.gradient} flex flex-col justify-between p-4 cursor-pointer`}
               onClick={handleTogglePlay}
             >
               <div className="flex items-center justify-between z-10">
                 <Badge variant="blue" className="bg-black/60 text-white backdrop-blur-md text-[10px] border-0">
-                  {selectedLesson.levelLabel}
+                  {activeLesson.levelLabel}
                 </Badge>
                 <span className="px-2.5 py-0.5 rounded-full bg-black/60 text-white text-[10px] font-bold backdrop-blur-md flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  {selectedLesson.durationFormatted}
+                  {activeLesson.durationFormatted}
                 </span>
               </div>
 
@@ -335,15 +350,15 @@ export const VideosPage: React.FC = () => {
               </div>
 
               <div className="bg-black/50 backdrop-blur-md p-2.5 rounded-xl text-xs z-10">
-                <span className="font-bold block truncate">{selectedLesson.title}</span>
+                <span className="font-bold block truncate">{activeLesson.title}</span>
                 <span className="text-[10px] text-white/80 block truncate">
-                  {selectedLesson.instructorAvatar} {selectedLesson.instructor} • {selectedLesson.topicLabel}
+                  {activeLesson.instructorAvatar} {activeLesson.instructor} • {activeLesson.topicLabel}
                 </span>
               </div>
             </div>
           ) : (
             /* Active Live Presentation with Continuous Sentence Progression */
-            <div className={`relative inset-0 w-full h-full bg-gradient-to-tr ${selectedLesson.gradient} flex flex-col justify-between p-3.5`}>
+            <div className={`relative inset-0 w-full h-full bg-gradient-to-tr ${activeLesson.gradient} flex flex-col justify-between p-3.5`}>
               {/* Top Status Bar */}
               <div className="flex items-center justify-between text-xs z-10">
                 <div className="flex items-center gap-1.5">
@@ -378,14 +393,14 @@ export const VideosPage: React.FC = () => {
               <div className="my-auto text-center space-y-2 z-10 px-2">
                 <div className="flex items-center justify-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-2xl shadow-lg animate-pulse">
-                    {selectedLesson.instructorAvatar}
+                    {activeLesson.instructorAvatar}
                   </div>
                   <div className="text-left">
                     <span className="text-[11px] font-bold text-white block">
-                      {selectedLesson.instructor}
+                      {activeLesson.instructor}
                     </span>
                     <span className="text-[9px] text-white/70 block">
-                      {selectedLesson.topicLabel} • Sentence {activeSentenceIndex + 1} of {totalSentences}
+                      {activeLesson.topicLabel} • Sentence {activeSentenceIndex + 1} of {totalSentences}
                     </span>
                   </div>
                 </div>
@@ -430,7 +445,7 @@ export const VideosPage: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between text-[10px] text-white/90 font-mono px-0.5">
                   <span>Part {activeSentenceIndex + 1}/{totalSentences}</span>
-                  <span>{selectedLesson.durationFormatted}</span>
+                  <span>{activeLesson.durationFormatted}</span>
                 </div>
               </div>
             </div>
@@ -507,17 +522,17 @@ export const VideosPage: React.FC = () => {
 
           <div>
             <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-snug">
-              {selectedLesson.title}
+              {activeLesson.title}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-              {selectedLesson.description}
+              {activeLesson.description}
             </p>
           </div>
 
           <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-slate-800 text-xs">
             <span className="font-bold text-amber-500 flex items-center gap-1">
               <Zap className="w-3.5 h-3.5 fill-current" />
-              +{selectedLesson.xpReward} XP Reward
+              +{activeLesson.xpReward} XP Reward
             </span>
 
             <Button
@@ -544,7 +559,7 @@ export const VideosPage: React.FC = () => {
         </div>
 
         <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-          {selectedLesson.transcript.map((line, idx) => {
+          {activeLesson.transcript.map((line, idx) => {
             const isLineActive = activeSentenceIndex === idx;
 
             return (
@@ -595,7 +610,7 @@ export const VideosPage: React.FC = () => {
         </h3>
 
         <div className="grid grid-cols-2 gap-2">
-          {selectedLesson.keyVocabulary.map((vocab, idx) => (
+          {activeLesson.keyVocabulary.map((vocab, idx) => (
             <div
               key={idx}
               className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800 space-y-1"
@@ -605,7 +620,7 @@ export const VideosPage: React.FC = () => {
                   {vocab.term}
                 </span>
                 <button
-                  onClick={() => handlePronounceWord(vocab.term, selectedLesson.languageCode)}
+                  onClick={() => handlePronounceWord(vocab.term, activeLesson.languageCode)}
                   className="p-1 text-slate-400 hover:text-blue-600 transition"
                   title="Pronounce"
                 >
@@ -625,7 +640,7 @@ export const VideosPage: React.FC = () => {
       <div className="space-y-3 pt-2">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-            {selectedLesson.languageName} Video Curriculum ({filteredVideos.length} Lessons)
+            {activeLesson.languageName} Video Curriculum ({filteredVideos.length} Lessons)
           </h3>
           <span className="text-[11px] text-blue-600 font-bold">A1 to C1</span>
         </div>
@@ -719,7 +734,7 @@ export const VideosPage: React.FC = () => {
         {/* Filtered Video Lessons List */}
         <div className="space-y-2">
           {filteredVideos.map((video) => {
-            const isCurrent = video.id === selectedLesson.id;
+            const isCurrent = video.id === activeLesson.id;
             const hasCompleted = completedVideos.includes(video.id);
 
             return (
