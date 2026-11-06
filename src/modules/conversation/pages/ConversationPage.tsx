@@ -112,6 +112,7 @@ export const ConversationPage: React.FC = () => {
   const { activeLanguageCode, setActiveLanguageCode } = useAppStore();
   const { notify } = useNotification();
 
+  const [micLanguageMode, setMicLanguageMode] = useState<'en' | 'native'>('en');
   const [activeTeacher, setActiveTeacher] = useState<TeacherPersona>(TEACHERS[0]);
   const [avatarState, setAvatarState] = useState<'idle' | 'speaking' | 'listening' | 'thinking'>('idle');
   const [isMuted, setIsMuted] = useState(false);
@@ -192,17 +193,19 @@ export const ConversationPage: React.FC = () => {
       const recognition = new SpeechRec();
       recognition.continuous = false;
       recognition.interimResults = false;
-      // Set recognition language
+      // Set recognition language based on user mode
       recognition.lang =
-        activeLanguageCode === 'kn'
-          ? 'kn-IN'
-          : activeLanguageCode === 'hi'
-            ? 'hi-IN'
-            : activeLanguageCode === 'te'
-              ? 'te-IN'
-              : activeLanguageCode === 'ta'
-                ? 'ta-IN'
-                : 'en-US';
+        micLanguageMode === 'en'
+          ? 'en-IN'
+          : activeLanguageCode === 'kn'
+            ? 'kn-IN'
+            : activeLanguageCode === 'hi'
+              ? 'hi-IN'
+              : activeLanguageCode === 'te'
+                ? 'te-IN'
+                : activeLanguageCode === 'ta'
+                  ? 'ta-IN'
+                  : 'en-US';
 
       setAvatarState('listening');
       notify({
@@ -286,108 +289,184 @@ export const ConversationPage: React.FC = () => {
     if (!replyNative) {
       // A. Greeting inquiries
       if (/^(hi|hello|namaskara|namaste|vanakkam|namaskaram|hey)/i.test(lower)) {
-      if (activeLanguageCode === 'kn') {
-        replyNative = `ನಮಸ್ಕಾರ! ನಿಮ್ಮ ಧ್ವನಿ ಕೇಳಿ ತುಂಬಾ ಸಂತೋಷವಾಯಿತು. ಇಂದು ನೀವು ಯಾವ ವಿಷಯದ ಬಗ್ಗೆ ಕಲಿಯಲು ಬಯಸುತ್ತೀರಿ?`;
-        replyRomanized = `Namaskara! Nimma dhvani keli tumba santhoshavayithu. Indu neevu yaava vishayada bagge kaliyalu bayasuttiri?`;
-        replyEnglish = `Hello! It is so wonderful hearing your voice. What topic would you like to learn today?`;
-      } else {
-        replyNative = `नमस्ते! आपसे बात करके बहुत अच्छा लगा। आज हम क्या अभ्यास करेंगे?`;
-        replyRomanized = `Namaste! Aapse baat karke bahut accha laga.`;
-        replyEnglish = `Hello! Great to hear from you. What should we practice today?`;
-      }
-    }
-    // B. "How are you"
-    else if (lower.includes('how are you') || lower.includes('hegiddiri') || lower.includes('kaise ho')) {
-      if (activeLanguageCode === 'kn') {
-        replyNative = `ನಾನು ತುಂಬಾ ಚೆನ್ನಾಗಿದ್ದೇನೆ, ಧನ್ಯವಾದಗಳು! ನೀವು ಹೇಗಿದ್ದೀರಿ? ನಿಮ್ಮ ಭಾಷಾ ಕಲಿಕೆ ಹೇಗೆ ಸಾಗುತ್ತಿದೆ?`;
-        replyRomanized = `Naanu tumba chennagiddene, dhanyavadagalu! Neevu hegiddiri? Nimma bhasha kalike hege saaguttide?`;
-        replyEnglish = `I am doing very well, thank you! How are you? How is your language learning going?`;
-      } else {
-        replyNative = `मैं बिल्कुल ठीक हूँ, धन्यवाद! आप कैसे हैं? आज क्या नया सीखेंगे?`;
-        replyRomanized = `Main bilkul theek hoon, dhanyavaad! Aap kaise hain?`;
-        replyEnglish = `I am very well, thank you! How are you? What new thing shall we learn today?`;
-      }
-    }
-    // C. "What is your name" / "who are you"
-    else if (lower.includes('your name') || lower.includes('hesarenu') || lower.includes('who are you')) {
-      if (activeLanguageCode === 'kn') {
-        replyNative = `ನನ್ನ ಹೆಸರು ${activeTeacher.name}. ನಾನು ನಿಮ್ಮ ವೈಯಕ್ತಿಕ ${langObj.name} ಶಿಕ್ಷಕಿ! ನೀವು ಯಾವುದೇ ಪ್ರಶ್ನೆ ಕೇಳಬಹುದು.`;
-        replyRomanized = `Nanna hesaru ${activeTeacher.name}. Naanu nimma ${langObj.name} shikshaki!`;
-        replyEnglish = `My name is ${activeTeacher.name}. I am your personal ${langObj.name} teacher! You can ask me anything.`;
-      } else {
-        replyNative = `मेरा नाम ${activeTeacher.name} है। मैं आपकी भाषा शिक्षक हूँ! आप कुछ भी पूछ सकते हैं।`;
-        replyRomanized = `Mera naam ${activeTeacher.name} hai.`;
-        replyEnglish = `My name is ${activeTeacher.name}. I am your language teacher!`;
-      }
-    }
-    // D. "How to say [something]" or "What is [something] in [language]"
-    else if (
-      lower.includes('how to say') ||
-      lower.includes('how do i say') ||
-      lower.includes('what is') ||
-      lower.includes('translate')
-    ) {
-      // Extract target query phrase
-      const query = clean
-        .replace(/how to say/i, '')
-        .replace(/how do i say/i, '')
-        .replace(/what is the meaning of/i, '')
-        .replace(/what is/i, '')
-        .replace(/in kannada/i, '')
-        .replace(/in hindi/i, '')
-        .replace(/in telugu/i, '')
-        .replace(/in tamil/i, '')
-        .replace(/translate/i, '')
-        .trim();
-
-      try {
-        const transResult = await translationService.translate({
-          text: query || clean,
-          sourceLanguage: 'en',
-          targetLanguage: activeLanguageCode,
-        });
-
-        const translatedPhrase = transResult.translatedText;
         if (activeLanguageCode === 'kn') {
-          replyNative = `"${query || clean}" ಗೆ ಕನ್ನಡದಲ್ಲಿ ನಾವು "${translatedPhrase}" ಎಂದು ಹೇಳುತ್ತೇವೆ. ನನ್ನ ನಂತರ ಉಚ್ಚರಿಸಿ ನೋಡಿ!`;
-          replyRomanized = `"${query || clean}" ge Kannadadalli naavu "${translatedPhrase}" endu heluththeve.`;
-          replyEnglish = `To say "${query || clean}" in Kannada, we say "${translatedPhrase}". Try repeating after me!`;
+          replyNative = `ನಮಸ್ಕಾರ! ನಿಮ್ಮ ಧ್ವನಿ ಕೇಳಿ ತುಂಬಾ ಸಂತೋಷವಾಯಿತು. ಇಂದು ನೀವು ಯಾವ ವಿಷಯದ ಬಗ್ಗೆ ಕಲಿಯಲು ಬಯಸುತ್ತೀರಿ?`;
+          replyRomanized = `Namaskara! Nimma dhvani keli tumba santhoshavayithu. Indu neevu yaava vishayada bagge kaliyalu bayasuttiri?`;
+          replyEnglish = `Hello! It is so wonderful hearing your voice. What topic would you like to learn today?`;
+        } else if (activeLanguageCode === 'te') {
+          replyNative = `నమస్కారం! మీ మాట వినడం చాలా ఆనందంగా ఉంది. ఈ రోజు మనం ఏ అంశం నేర్చుకుందాం?`;
+          replyRomanized = `Namaskaram! Mee maata vinadam chala aanandanga undi. Ee roju manam emi nerchukundam?`;
+          replyEnglish = `Hello! Wonderful to hear your voice. What topic would you like to learn today?`;
+        } else if (activeLanguageCode === 'ta') {
+          replyNative = `வணக்கம்! உங்கள் குரலைக் கேட்பதில் மகிழ்ச்சி. இன்று நாம் என்ன கற்கலாம்?`;
+          replyRomanized = `Vanakkam! Ungal kuralaik ketpadhil magizhchi. Indru naam enna karkalaam?`;
+          replyEnglish = `Hello! So nice to hear your voice. What shall we learn today?`;
+        } else if (activeLanguageCode === 'en') {
+          replyNative = `Hello! So glad to hear from you. What would you like to practice today?`;
+          replyRomanized = `Hello! So glad to hear from you.`;
+          replyEnglish = `Hello! So glad to hear from you. What would you like to practice today?`;
         } else {
-          replyNative = `"${query || clean}" को ${langObj.name} में "${translatedPhrase}" कहते हैं। इसे बोलने का अभ्यास करें!`;
-          replyRomanized = `"${query || clean}" ko ${langObj.name} mein "${translatedPhrase}" kehte hain.`;
-          replyEnglish = `In ${langObj.name}, "${query || clean}" is called "${translatedPhrase}". Practice saying it!`;
+          replyNative = `नमस्ते! आपसे बात करके बहुत अच्छा लगा। आज हम क्या अभ्यास करेंगे?`;
+          replyRomanized = `Namaste! Aapse baat karke bahut accha laga.`;
+          replyEnglish = `Hello! Great to hear from you. What should we practice today?`;
         }
-      } catch {
-        replyNative = `ತುಂಬಾ ಒಳ್ಳೆಯ ಪ್ರಶ್ನೆ! ಈ ಪದವನ್ನು ನಿಯಮಿತವಾಗಿ ಅಭ್ಯಾಸ ಮಾಡಿ.`;
-        replyRomanized = `Tumba olleya prashne!`;
-        replyEnglish = `Great question! Practice this word regularly.`;
       }
-    }
-    // E. Student practicing a phrase in Kannada or native script
-    else if (/[\u0C80-\u0CFF\u0900-\u097F\u0B80-\u0BFF\u0C00-\u0C7F]/.test(clean)) {
-      replyNative = `ಅದ್ಭುತ! ನೀವು "${clean}" ಎಂದು ಅತ್ಯಂತ ನಿಖರವಾಗಿ ಹೇಳಿದಿರಿ. ನಿಮ್ಮ ಉಚ್ಚಾರಣೆ 98% ನಿಖರವಾಗಿದೆ! 🌟`;
-      replyRomanized = `Adbhutha! Neevu "${clean}" endu atyanta nikharavagi helidiri.`;
-      replyEnglish = `Terrific! You said "${clean}" with exceptional clarity and pronunciation!`;
-    }
-    // F. General Student query / sentence: Translate & provide instructional teacher feedback
-    else {
-      try {
-        const transResult = await translationService.translate({
-          text: clean,
-          sourceLanguage: 'en',
-          targetLanguage: activeLanguageCode,
-        });
+      // B. "How are you"
+      else if (lower.includes('how are you') || lower.includes('hegiddiri') || lower.includes('kaise ho') || lower.includes('ela unnaru')) {
+        if (activeLanguageCode === 'kn') {
+          replyNative = `ನಾನು ತುಂಬಾ ಚೆನ್ನಾಗಿದ್ದೇನೆ, ಧನ್ಯವಾದಗಳು! ನೀವು ಹೇಗಿದ್ದೀರಿ? ನಿಮ್ಮ ಭಾಷಾ ಕಲಿಕೆ ಹೇಗೆ ಸಾಗುತ್ತಿದೆ?`;
+          replyRomanized = `Naanu tumba chennagiddene, dhanyavadagalu! Neevu hegiddiri? Nimma bhasha kalike hege saaguttide?`;
+          replyEnglish = `I am doing very well, thank you! How are you? How is your language learning going?`;
+        } else if (activeLanguageCode === 'te') {
+          replyNative = `నేను చాలా బాగున్నాను, ధన్యవాదాలు! మీరు ఎలా ఉన్నారు? మీ భాషా సాధన ఎలా సాగుతోంది?`;
+          replyRomanized = `Nenu chala bagunnanu, dhanyavadalu! Meeru ela unnaru?`;
+          replyEnglish = `I am doing very well, thank you! How are you? How is your language practice going?`;
+        } else if (activeLanguageCode === 'ta') {
+          replyNative = `நான் நலமாக உள்ளேன், நன்றி! நீங்கள் எப்படி இருக்கிறீர்கள்?`;
+          replyRomanized = `Naan nalamaaga ullen, nandri! Neengal eppadi irukkireergal?`;
+          replyEnglish = `I am very well, thank you! How are you doing?`;
+        } else if (activeLanguageCode === 'en') {
+          replyNative = `I am doing fantastic, thank you! How are you? How is your learning going today?`;
+          replyRomanized = `I am doing fantastic, thank you!`;
+          replyEnglish = `I am doing fantastic, thank you! How are you? How is your learning going today?`;
+        } else {
+          replyNative = `मैं बिल्कुल ठीक हूँ, धन्यवाद! आप कैसे हैं? आज क्या नया सीखेंगे?`;
+          replyRomanized = `Main bilkul theek hoon, dhanyavaad! Aap kaise hain?`;
+          replyEnglish = `I am very well, thank you! How are you? What new thing shall we learn today?`;
+        }
+      }
+      // C. "What is your name" / "who are you"
+      else if (lower.includes('your name') || lower.includes('hesarenu') || lower.includes('who are you') || lower.includes('mee peru')) {
+        if (activeLanguageCode === 'kn') {
+          replyNative = `ನನ್ನ ಹೆಸರು ${activeTeacher.name}. ನಾನು ನಿಮ್ಮ ವೈಯಕ್ತಿಕ ${langObj.name} ಶಿಕ್ಷಕಿ! ನೀವು ಯಾವುದೇ ಪ್ರಶ್ನೆ ಕೇಳಬಹುದು.`;
+          replyRomanized = `Nanna hesaru ${activeTeacher.name}. Naanu nimma ${langObj.name} shikshaki!`;
+          replyEnglish = `My name is ${activeTeacher.name}. I am your personal ${langObj.name} teacher! You can ask me anything.`;
+        } else if (activeLanguageCode === 'te') {
+          replyNative = `నా పేరు ${activeTeacher.name}. నేను మీ ${langObj.name} ఉపాధ్యాయుడిని! మీరు నన్ను ఏదైనా అడగవచ్చు.`;
+          replyRomanized = `Naa peru ${activeTeacher.name}. Nenu mee ${langObj.name} upadhyayudini!`;
+          replyEnglish = `My name is ${activeTeacher.name}. I am your personal ${langObj.name} tutor! Feel free to ask me anything.`;
+        } else if (activeLanguageCode === 'ta') {
+          replyNative = `என் பெயர் ${activeTeacher.name}. நான் உங்கள் ${langObj.name} ஆசிரியர்!`;
+          replyRomanized = `En peyar ${activeTeacher.name}. Naan ungal ${langObj.name} aasiriyar!`;
+          replyEnglish = `My name is ${activeTeacher.name}. I am your ${langObj.name} teacher!`;
+        } else if (activeLanguageCode === 'en') {
+          replyNative = `My name is ${activeTeacher.name}. I am your interactive English teacher! You can ask me anything.`;
+          replyRomanized = `My name is ${activeTeacher.name}.`;
+          replyEnglish = `My name is ${activeTeacher.name}. I am your interactive English teacher! You can ask me anything.`;
+        } else {
+          replyNative = `मेरा नाम ${activeTeacher.name} है। मैं आपकी भाषा शिक्षक हूँ! आप कुछ भी पूछ सकते हैं।`;
+          replyRomanized = `Mera naam ${activeTeacher.name} hai.`;
+          replyEnglish = `My name is ${activeTeacher.name}. I am your language teacher!`;
+        }
+      }
+      // D. "How to say [something]" or "What is [something] in [language]"
+      else if (
+        lower.includes('how to say') ||
+        lower.includes('how do i say') ||
+        lower.includes('what is') ||
+        lower.includes('translate')
+      ) {
+        const query = clean
+          .replace(/how to say/i, '')
+          .replace(/how do i say/i, '')
+          .replace(/what is the meaning of/i, '')
+          .replace(/what is/i, '')
+          .replace(/in kannada/i, '')
+          .replace(/in hindi/i, '')
+          .replace(/in telugu/i, '')
+          .replace(/in tamil/i, '')
+          .replace(/translate/i, '')
+          .trim();
 
-        replyNative = `ಉತ್ತಮ ಪ್ರಶ್ನೆ! ಇದನ್ನು ${langObj.name} ನಲ್ಲಿ ಹೀಗೆ ವ್ಯಕ್ತಪಡಿಸಬಹುದು: "${transResult.translatedText}".`;
-        replyRomanized = `Uttama prashne! Idhannu heege vyaktapadisabahudu: "${transResult.translatedText}".`;
-        replyEnglish = `Good thought! In ${langObj.name}, you can express this as: "${transResult.translatedText}".`;
-      } catch {
-        replyNative = `ಬಹಳ ಚೆನ್ನಾಗಿದೆ! ನಿಮ್ಮ ಭಾಷಾ ಅಭ್ಯಾಸವನ್ನು ಹೀಗೆಯೇ ಮುಂದುವರಿಸಿ.`;
-        replyRomanized = `Bahala chennagide!`;
-        replyEnglish = `Very good! Keep practicing your language skills like this.`;
+        try {
+          const transResult = await translationService.translate({
+            text: query || clean,
+            sourceLanguage: 'en',
+            targetLanguage: activeLanguageCode,
+          });
+
+          const translatedPhrase = transResult.translatedText;
+          if (activeLanguageCode === 'kn') {
+            replyNative = `"${query || clean}" ಗೆ ಕನ್ನಡದಲ್ಲಿ ನಾವು "${translatedPhrase}" ಎಂದು ಹೇಳುತ್ತೇವೆ. ನನ್ನ ನಂತರ ಉಚ್ಚರಿಸಿ ನೋಡಿ!`;
+            replyRomanized = `"${query || clean}" ge Kannadadalli naavu "${translatedPhrase}" endu heluththeve.`;
+            replyEnglish = `To say "${query || clean}" in Kannada, we say "${translatedPhrase}". Try repeating after me!`;
+          } else if (activeLanguageCode === 'te') {
+            replyNative = `"${query || clean}" ను తెలుగులో మనం "${translatedPhrase}" అంటాము. నాతో పాటు పలకండి!`;
+            replyRomanized = `"${query || clean}" nu Telugulo manam "${translatedPhrase}" antamu.`;
+            replyEnglish = `To say "${query || clean}" in Telugu, we say "${translatedPhrase}". Repeat after me!`;
+          } else if (activeLanguageCode === 'ta') {
+            replyNative = `"${query || clean}" என்பதை தமிழில் "${translatedPhrase}" என்று சொல்வோம். என்னுடன் சொல்லுங்கள்!`;
+            replyRomanized = `"${query || clean}" enbadhai Thamizhil "${translatedPhrase}" endru solvom.`;
+            replyEnglish = `In Tamil, "${query || clean}" is called "${translatedPhrase}". Practice saying it!`;
+          } else if (activeLanguageCode === 'en') {
+            replyNative = `In English, we say: "${translatedPhrase}". Repeat after me!`;
+            replyRomanized = `In English, we say: "${translatedPhrase}".`;
+            replyEnglish = `In English, we say: "${translatedPhrase}". Repeat after me!`;
+          } else {
+            replyNative = `"${query || clean}" को ${langObj.name} में "${translatedPhrase}" कहते हैं। इसे बोलने का अभ्यास करें!`;
+            replyRomanized = `"${query || clean}" ko ${langObj.name} mein "${translatedPhrase}" kehte hain.`;
+            replyEnglish = `In ${langObj.name}, "${query || clean}" is called "${translatedPhrase}". Practice saying it!`;
+          }
+        } catch {
+          replyNative = `ತುಂಬಾ ಒಳ್ಳೆಯ ಪ್ರಶ್ನೆ! ಈ ಪದವನ್ನು ನಿಯಮಿತವಾಗಿ ಅಭ್ಯಾಸ ಮಾಡಿ.`;
+          replyRomanized = `Tumba olleya prashne!`;
+          replyEnglish = `Great question! Practice this regularly.`;
+        }
+      }
+      // E. Student practicing a phrase in Kannada, Hindi, Telugu, Tamil or native script
+      else if (/[\u0C80-\u0CFF\u0900-\u097F\u0B80-\u0BFF\u0C00-\u0C7F]/.test(clean)) {
+        try {
+          const transBack = await translationService.translate({
+            text: clean,
+            sourceLanguage: activeLanguageCode,
+            targetLanguage: 'en',
+          });
+          replyNative = `అద్భుతం / ಅದ್ಭುತ! "${clean}" (${transBack.translatedText}). మీ ఉచ్చారణ చాలా బాగుంది! 🌟`;
+          replyRomanized = `Pronunciation accuracy: 98%`;
+          replyEnglish = `Terrific! You said "${clean}" which means "${transBack.translatedText}". Exceptional clarity!`;
+        } catch {
+          replyNative = `ಅದ್ಭುತ! ನೀವು "${clean}" ಎಂದು ಅತ್ಯಂತ ನಿಖರವಾಗಿ ಹೇಳಿದಿರಿ. ನಿಮ್ಮ ಉಚ್ಚಾರಣೆ 98% ನಿಖರವಾಗಿದೆ! 🌟`;
+          replyRomanized = `Adbhutha!`;
+          replyEnglish = `Terrific! You said "${clean}" with exceptional clarity!`;
+        }
+      }
+      // F. General Student query / sentence: Dynamically Translate to Target Language!
+      else {
+        try {
+          const transResult = await translationService.translate({
+            text: clean,
+            sourceLanguage: 'en',
+            targetLanguage: activeLanguageCode,
+          });
+
+          if (activeLanguageCode === 'te') {
+            replyNative = `చాలా మంచి ఆలోచన! దీనిని తెలుగులో ఇలా వ్యక్తపరచవచ్చు: "${transResult.translatedText}".`;
+            replyRomanized = `Chala manchi aalochana! Deenini Telugulo ila vyaktaparachavachu: "${transResult.translatedText}".`;
+            replyEnglish = `Great thought! In Telugu, you can say: "${transResult.translatedText}".`;
+          } else if (activeLanguageCode === 'kn') {
+            replyNative = `ಉತ್ತಮ ಪ್ರಶ್ನೆ! ಇದನ್ನು ಕನ್ನಡದಲ್ಲಿ ಹೀಗೆ ವ್ಯಕ್ತಪಡಿಸಬಹುದು: "${transResult.translatedText}".`;
+            replyRomanized = `Uttama prashne! Idhannu Kannadadalli heege vyaktapadisabahudu: "${transResult.translatedText}".`;
+            replyEnglish = `Good thought! In Kannada, you can express this as: "${transResult.translatedText}".`;
+          } else if (activeLanguageCode === 'ta') {
+            replyNative = `சிறந்த கேள்வி! இதை தமிழில் இப்படி சொல்லலாம்: "${transResult.translatedText}".`;
+            replyRomanized = `Sirandha kelvi! Idhai Thamizhil ippadi sollalaam: "${transResult.translatedText}".`;
+            replyEnglish = `Great question! In Tamil, you can say: "${transResult.translatedText}".`;
+          } else if (activeLanguageCode === 'en') {
+            replyNative = `Great thought! In English, you can say: "${transResult.translatedText}". Let's practice saying it together!`;
+            replyRomanized = `Great thought!`;
+            replyEnglish = `Great thought! In English, you can say: "${transResult.translatedText}".`;
+          } else {
+            replyNative = `बहुत अच्छा विचार! इसे ${langObj.name} में ऐसे कह सकते हैं: "${transResult.translatedText}"।`;
+            replyRomanized = `Bahut achha vichaar!`;
+            replyEnglish = `Good thought! In ${langObj.name}, you can express this as: "${transResult.translatedText}".`;
+          }
+        } catch {
+          replyNative = `ಬಹಳ ಚೆನ್ನಾಗಿದೆ! ನಿಮ್ಮ ಭಾಷಾ ಅಭ್ಯಾಸವನ್ನು ಹೀಗೆಯೇ ಮುಂದುವರಿಸಿ.`;
+          replyRomanized = `Very good practice!`;
+          replyEnglish = `Very good! Keep practicing your language skills like this.`;
+        }
       }
     }
-  }
 
     const newSub = {
       native: replyNative,
@@ -623,43 +702,71 @@ export const ConversationPage: React.FC = () => {
         </div>
 
         {/* Video Call Controls Bar */}
-        <div className="p-3.5 bg-black/40 backdrop-blur-md border-t border-white/10 flex items-center justify-around z-10">
-          {/* Mute audio */}
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            className={`p-3 rounded-full transition ${
-              isMuted ? 'bg-red-600 text-white' : 'bg-white/20 text-white hover:bg-white/30'
-            }`}
-            title={isMuted ? 'Unmute' : 'Mute'}
-          >
-            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-          </button>
+        <div className="p-3.5 bg-black/40 backdrop-blur-md border-t border-white/10 space-y-2 z-10">
+          {/* Mic Language Selector */}
+          <div className="flex items-center justify-center gap-1.5 pb-0.5">
+            <button
+              type="button"
+              onClick={() => setMicLanguageMode('en')}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
+                micLanguageMode === 'en'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20'
+              }`}
+            >
+              🎤 Speak in English
+            </button>
+            <button
+              type="button"
+              onClick={() => setMicLanguageMode('native')}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition ${
+                micLanguageMode === 'native'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-white/10 text-white/70 hover:bg-white/20'
+              }`}
+            >
+              🗣️ Speak in {SUPPORTED_LANGUAGES.find((l) => l.code === activeLanguageCode)?.name || 'Native'}
+            </button>
+          </div>
 
-          {/* Big Center Microphone: Real Speech-to-Text Recognition */}
-          <button
-            onClick={handleStartVoiceRecognition}
-            disabled={avatarState === 'speaking'}
-            className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 transform active:scale-95 ${
-              avatarState === 'listening'
-                ? 'bg-emerald-500 text-white animate-pulse ring-8 ring-emerald-500/40'
-                : 'bg-gradient-to-tr from-blue-500 to-indigo-600 text-white hover:scale-105 shadow-blue-500/50'
-            }`}
-            title="Tap and speak to your teacher"
-          >
-            <Mic className="w-7 h-7" />
-          </button>
+          <div className="flex items-center justify-around">
+            {/* Mute audio */}
+            <button
+              onClick={() => setIsMuted(!isMuted)}
+              className={`p-3 rounded-full transition ${
+                isMuted ? 'bg-red-600 text-white' : 'bg-white/20 text-white hover:bg-white/30'
+              }`}
+              title={isMuted ? 'Unmute' : 'Mute'}
+            >
+              {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+            </button>
 
-          {/* End Call / Reset */}
-          <button
-            onClick={() => {
-              notify({ type: 'info', message: 'Lesson ended with ' + activeTeacher.name });
-              setCallDuration(0);
-            }}
-            className="p-3 rounded-full bg-red-600/90 text-white hover:bg-red-700 transition"
-            title="End Lesson"
-          >
-            <PhoneOff className="w-5 h-5" />
-          </button>
+            {/* Big Center Microphone: Real Speech-to-Text Recognition */}
+            <button
+              onClick={handleStartVoiceRecognition}
+              disabled={avatarState === 'speaking'}
+              className={`w-16 h-16 rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 transform active:scale-95 ${
+                avatarState === 'listening'
+                  ? 'bg-emerald-500 text-white animate-pulse ring-8 ring-emerald-500/40'
+                  : 'bg-gradient-to-tr from-blue-500 to-indigo-600 text-white hover:scale-105 shadow-blue-500/50'
+              }`}
+              title="Tap and speak to your teacher"
+            >
+              <Mic className="w-7 h-7" />
+            </button>
+
+            {/* End Call / Reset */}
+            <button
+              onClick={() => {
+                notify({ type: 'info', message: 'Lesson ended with ' + activeTeacher.name });
+                setCallDuration(0);
+              }}
+              className="p-3 rounded-full bg-red-600/90 text-white hover:bg-red-700 transition"
+              title="End Lesson"
+            >
+              <PhoneOff className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </Card>
 

@@ -19,6 +19,8 @@ import {
   FastForward,
   Rewind,
   RotateCcw,
+  SkipBack,
+  SkipForward,
 } from 'lucide-react';
 import { ALL_VIDEO_LESSONS } from '../data/videos.data';
 import { VideoLesson, VideoDurationCategory, VideoProficiencyLevel } from '../types/video.types';
@@ -37,10 +39,10 @@ export const VideosPage: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [playbackRate, setPlaybackRate] = useState<number>(1.0);
-  const [currentTimeSec, setCurrentTimeSec] = useState<number>(0);
+  const [activeSentenceIndex, setActiveSentenceIndex] = useState<number>(0);
   const [completedVideos, setCompletedVideos] = useState<string[]>(['vid-kn-beginner-1']);
 
-  // Filter lessons by active language
+  // Lessons list filtered by active language
   const languageLessons = useMemo(() => {
     const list = ALL_VIDEO_LESSONS.filter((v) => v.languageCode === activeLanguageCode);
     return list.length > 0 ? list : ALL_VIDEO_LESSONS.filter((v) => v.languageCode === 'kn');
@@ -48,18 +50,7 @@ export const VideosPage: React.FC = () => {
 
   const [selectedLesson, setSelectedLesson] = useState<VideoLesson>(languageLessons[0]);
 
-  // Update selected lesson if language changes
-  const handleLanguageChange = (code: string) => {
-    setActiveLanguageCode(code);
-    const newLangList = ALL_VIDEO_LESSONS.filter((v) => v.languageCode === code);
-    if (newLangList.length > 0) {
-      setSelectedLesson(newLangList[0]);
-    }
-    setIsPlaying(false);
-    setCurrentTimeSec(0);
-  };
-
-  // Filtered list
+  // Filtered list by search, level, duration
   const filteredVideos = useMemo(() => {
     return languageLessons.filter((vid) => {
       const matchDuration = selectedDuration === 'all' || vid.durationCategory === selectedDuration;
@@ -73,86 +64,186 @@ export const VideosPage: React.FC = () => {
     });
   }, [languageLessons, selectedDuration, selectedLevel, searchQuery]);
 
-  // Find active transcript line based on currentTimeSec
-  const activeTranscriptIndex = useMemo(() => {
-    const transcript = selectedLesson.transcript;
-    let idx = 0;
-    for (let i = 0; i < transcript.length; i++) {
-      if (currentTimeSec >= transcript[i].seconds) {
-        idx = i;
+  // Sync selected lesson when activeLanguageCode changes
+  const handleLanguageChange = (code: string) => {
+    setActiveLanguageCode(code);
+    const newLangList = ALL_VIDEO_LESSONS.filter((v) => v.languageCode === code);
+    if (newLangList.length > 0) {
+      setSelectedLesson(newLangList[0]);
+    }
+    SpeechService.stop();
+    setIsPlaying(false);
+    setActiveSentenceIndex(0);
+  };
+
+  const totalSentences = selectedLesson.transcript.length;
+  const currentSentence =
+    selectedLesson.transcript[activeSentenceIndex] || selectedLesson.transcript[0];
+
+  // Auto-scroll active transcript line into view
+  useEffect(() => {
+    const lineElem = document.getElementById(`transcript-item-${activeSentenceIndex}`);
+    if (lineElem) {
+      lineElem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [activeSentenceIndex]);
+
+  /**
+   * Continuous Flowing Audio Narration Engine:
+   * When sentence speech finishes (or times out via watchdog), advances to the next sentence!
+   * When all sentences in the video finish, advances automatically to the NEXT video lesson!
+   */
+  useEffect(() => {
+    if (!isPlaying) {
+      SpeechService.stop();
+      return;
+    }
+
+    let isCancelled = false;
+    const speechCode = `${selectedLesson.languageCode}-IN`;
+
+    // Dynamic display time calculation: ~65ms per character, clamped between 3.5s and 9s
+    const textLen = currentSentence?.text?.length || 30;
+    const estimatedDurationMs = Math.round(
+      Math.max(3200, Math.min(9000, textLen * 65)) / playbackRate
+    );
+
+    const playSentenceStep = async () => {
+      if (!isMuted && currentSentence) {
+        // Use SpeechSynthesis with safety watchdog timer so mobile browsers NEVER stall
+        await new Promise<void>((resolve) => {
+          let finished = false;
+          const complete = () => {
+            if (!finished) {
+              finished = true;
+              resolve();
+            }
+          };
+
+          // Watchdog timer: if browser voice hangs or fails, keep video rolling smoothly
+          const watchdog = setTimeout(complete, estimatedDurationMs + 1200);
+
+          SpeechService.speak(currentSentence.text, speechCode)
+            .then(() => {
+              clearTimeout(watchdog);
+              complete();
+            })
+            .catch(() => {
+              clearTimeout(watchdog);
+              complete();
+            });
+        });
       } else {
-        break;
+        // If muted, show sentence for duration
+        await new Promise((resolve) => setTimeout(resolve, estimatedDurationMs));
       }
-    }
-    return idx;
-  }, [currentTimeSec, selectedLesson.transcript]);
 
-  const activeLine = selectedLesson.transcript[activeTranscriptIndex] || selectedLesson.transcript[0];
+      if (isCancelled) return;
 
-  // Video timeline playback ticker
-  useEffect(() => {
-    if (!isPlaying) return;
+      // Natural pause between sentences (700ms scaled by rate)
+      const interSentencePause = Math.round(700 / playbackRate);
+      await new Promise((resolve) => setTimeout(resolve, interSentencePause));
 
-    const intervalMs = Math.round(1000 / playbackRate);
-    const timer = setInterval(() => {
-      setCurrentTimeSec((prev) => {
-        if (prev >= selectedLesson.durationSeconds) {
-          setIsPlaying(false);
-          handleCompleteLesson();
-          return selectedLesson.durationSeconds;
-        }
-        return prev + 1;
-      });
-    }, intervalMs);
+      if (isCancelled) return;
 
-    return () => clearInterval(timer);
-  }, [isPlaying, playbackRate, selectedLesson.durationSeconds]);
+      // Next sentence OR next video
+      if (activeSentenceIndex < totalSentences - 1) {
+        setActiveSentenceIndex((prev) => prev + 1);
+      } else {
+        // Video finished: Auto-advance to next video lesson
+        handleCompleteLesson();
+        handleAutoAdvanceNextVideo();
+      }
+    };
 
-  // Speak active line when line changes during playback
-  useEffect(() => {
-    if (isPlaying && !isMuted && activeLine) {
-      const speechCode = `${selectedLesson.languageCode}-IN`;
-      SpeechService.speak(activeLine.text, speechCode).catch(() => {});
-    }
-  }, [activeTranscriptIndex, isPlaying, isMuted]);
+    playSentenceStep();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeSentenceIndex, isPlaying, selectedLesson.id, playbackRate, isMuted]);
+
+  // Auto-advance to next video in curriculum
+  const handleAutoAdvanceNextVideo = () => {
+    const currentIndex = filteredVideos.findIndex((v) => v.id === selectedLesson.id);
+    const nextIndex = (currentIndex + 1) % filteredVideos.length;
+    const nextLesson = filteredVideos[nextIndex];
+
+    setSelectedLesson(nextLesson);
+    setActiveSentenceIndex(0);
+    setIsPlaying(true);
+
+    notify({
+      type: 'success',
+      title: 'Auto-Advancing to Next Video! 🎬',
+      message: `Now playing: "${nextLesson.title}"`,
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNextVideo = () => {
+    SpeechService.stop();
+    handleAutoAdvanceNextVideo();
+  };
+
+  const handlePrevVideo = () => {
+    SpeechService.stop();
+    const currentIndex = filteredVideos.findIndex((v) => v.id === selectedLesson.id);
+    const prevIndex = (currentIndex - 1 + filteredVideos.length) % filteredVideos.length;
+    const prevLesson = filteredVideos[prevIndex];
+
+    setSelectedLesson(prevLesson);
+    setActiveSentenceIndex(0);
+    setIsPlaying(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleSelectVideo = (video: VideoLesson) => {
+    SpeechService.stop();
     setSelectedLesson(video);
     setIsPlaying(false);
-    setCurrentTimeSec(0);
+    setActiveSentenceIndex(0);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleTogglePlay = () => {
     if (isPlaying) {
-      setIsPlaying(false);
-    } else {
-      setIsPlaying(true);
-      if (!isMuted && activeLine) {
-        SpeechService.speak(activeLine.text, `${selectedLesson.languageCode}-IN`).catch(() => {});
-      }
+      SpeechService.stop();
     }
+    setIsPlaying(!isPlaying);
   };
 
-  const handleSeek = (seconds: number) => {
-    setCurrentTimeSec(seconds);
+  const handleSeekSentence = (idx: number) => {
+    SpeechService.stop();
+    setActiveSentenceIndex(idx);
     setIsPlaying(true);
     notify({
       type: 'info',
-      message: `Jumped to timestamp ${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`,
+      message: `Jumped to sentence ${idx + 1} of ${totalSentences}`,
     });
   };
 
-  const handleRewind10 = () => {
-    setCurrentTimeSec((prev) => Math.max(0, prev - 10));
+  const handleNextSentence = () => {
+    SpeechService.stop();
+    if (activeSentenceIndex < totalSentences - 1) {
+      setActiveSentenceIndex((prev) => prev + 1);
+      setIsPlaying(true);
+    } else {
+      handleAutoAdvanceNextVideo();
+    }
   };
 
-  const handleForward10 = () => {
-    setCurrentTimeSec((prev) => Math.min(selectedLesson.durationSeconds, prev + 10));
+  const handlePrevSentence = () => {
+    SpeechService.stop();
+    if (activeSentenceIndex > 0) {
+      setActiveSentenceIndex((prev) => prev - 1);
+      setIsPlaying(true);
+    }
   };
 
   const handleRestart = () => {
-    setCurrentTimeSec(0);
+    SpeechService.stop();
+    setActiveSentenceIndex(0);
     setIsPlaying(true);
   };
 
@@ -162,38 +253,29 @@ export const VideosPage: React.FC = () => {
   };
 
   const handleCompleteLesson = () => {
-    if (completedVideos.includes(selectedLesson.id)) {
+    if (!completedVideos.includes(selectedLesson.id)) {
+      setCompletedVideos((prev) => [...prev, selectedLesson.id]);
       notify({
-        type: 'info',
-        message: 'You have already completed this video lesson.',
+        type: 'success',
+        title: 'Lesson Mastered! 🏆',
+        message: `Earned +${selectedLesson.xpReward} XP for completing "${selectedLesson.title}".`,
       });
-      return;
     }
-
-    setCompletedVideos((prev) => [...prev, selectedLesson.id]);
-    notify({
-      type: 'success',
-      title: 'Lesson Completed! 🏆',
-      message: `Earned +${selectedLesson.xpReward} XP for completing "${selectedLesson.title}".`,
-    });
-  };
-
-  const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   const isCompleted = completedVideos.includes(selectedLesson.id);
-  const progressPercent = Math.min(100, Math.round((currentTimeSec / selectedLesson.durationSeconds) * 100));
+  const progressPercent = Math.min(
+    100,
+    Math.round(((activeSentenceIndex + 1) / totalSentences) * 100)
+  );
 
   return (
     <div className="space-y-5 animate-fadeIn pb-14">
       <ModuleHeader
-        title="100+ Masterclass Video Academy"
-        subtitle="100% native in-app video masterclasses from Beginner (A1) to Fluent (C1)."
+        title="Interactive Video Academy"
+        subtitle="Continuous sentence-by-sentence flowing lessons with auto-advance."
         icon={Video}
-        badge="Native In-App Video"
+        badge="Continuous Flow"
       />
 
       {/* Language Switcher Bar */}
@@ -215,7 +297,7 @@ export const VideosPage: React.FC = () => {
         </select>
       </div>
 
-      {/* Native In-App Video Studio Stage (100% Self-Contained, Zero External Links) */}
+      {/* Native Flowing Video Stage (100% In-App, Zero External Dependencies) */}
       <Card className="overflow-hidden p-0 border border-slate-200/80 dark:border-slate-800 shadow-2xl bg-slate-950 text-white">
         <div className="relative aspect-video w-full flex flex-col justify-between overflow-hidden select-none">
           {!isPlaying ? (
@@ -242,10 +324,10 @@ export const VideosPage: React.FC = () => {
                   <Play className="w-8 h-8 fill-current ml-1" />
                 </button>
                 <span className="text-xs font-bold mt-2.5 tracking-wide drop-shadow">
-                  Tap to Start In-App Video Lesson
+                  Tap to Start Flowing Video Lesson
                 </span>
                 <span className="text-[10px] text-white/80 mt-0.5">
-                  100% Native Audio • Animated Studio • Zero Buffering
+                  Sentence-by-Sentence Narration • Auto-Advance to Next Video
                 </span>
               </div>
 
@@ -257,7 +339,7 @@ export const VideosPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            /* Active In-App Video Stage with Teacher Presentation */
+            /* Active Live Presentation with Continuous Sentence Progression */
             <div className={`relative inset-0 w-full h-full bg-gradient-to-tr ${selectedLesson.gradient} flex flex-col justify-between p-3.5`}>
               {/* Top Status Bar */}
               <div className="flex items-center justify-between text-xs z-10">
@@ -267,7 +349,7 @@ export const VideosPage: React.FC = () => {
                     Live Masterclass
                   </span>
                   <span className="px-1.5 py-0.5 rounded bg-black/40 text-[9px] font-mono text-white/90">
-                    1080p HD
+                    Sentence {activeSentenceIndex + 1}/{totalSentences}
                   </span>
                 </div>
 
@@ -289,7 +371,7 @@ export const VideosPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Center Presentation Stage */}
+              {/* Center Flowing Presentation Stage */}
               <div className="my-auto text-center space-y-2 z-10 px-2">
                 <div className="flex items-center justify-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-2xl shadow-lg animate-pulse">
@@ -300,22 +382,22 @@ export const VideosPage: React.FC = () => {
                       {selectedLesson.instructor}
                     </span>
                     <span className="text-[9px] text-white/70 block">
-                      {selectedLesson.topicLabel} Masterclass
+                      {selectedLesson.topicLabel} • Sentence {activeSentenceIndex + 1} of {totalSentences}
                     </span>
                   </div>
                 </div>
 
-                {/* Main Active Lesson Slide */}
-                <div className="p-3.5 rounded-2xl bg-black/60 backdrop-blur-md border border-white/20 max-w-sm mx-auto shadow-2xl space-y-1">
+                {/* Main Active Lesson Slide (Moves dynamically to next sentence) */}
+                <div className="p-3.5 rounded-2xl bg-black/60 backdrop-blur-md border border-white/20 max-w-sm mx-auto shadow-2xl space-y-1.5 transition-all duration-300">
                   <div className="text-[10px] text-blue-300 font-bold uppercase tracking-wider flex items-center justify-center gap-1">
                     <Sparkles className="w-3 h-3 text-amber-400" />
                     <span>Current Focus Sentence</span>
                   </div>
-                  <p className="text-base font-bold text-white drop-shadow leading-snug">
-                    {activeLine.text}
+                  <p className="text-sm md:text-base font-bold text-white drop-shadow leading-snug">
+                    {currentSentence?.text}
                   </p>
                   <p className="text-xs text-white/80 italic">
-                    "{activeLine.translation}"
+                    "{currentSentence?.translation}"
                   </p>
                 </div>
 
@@ -344,7 +426,7 @@ export const VideosPage: React.FC = () => {
                   />
                 </div>
                 <div className="flex items-center justify-between text-[10px] text-white/90 font-mono px-0.5">
-                  <span>{formatTime(currentTimeSec)}</span>
+                  <span>Part {activeSentenceIndex + 1}/{totalSentences}</span>
                   <span>{selectedLesson.durationFormatted}</span>
                 </div>
               </div>
@@ -363,25 +445,42 @@ export const VideosPage: React.FC = () => {
                 {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
               </button>
               <button
-                onClick={handleRewind10}
-                className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300"
-                title="Rewind 10s"
+                onClick={handlePrevSentence}
+                disabled={activeSentenceIndex === 0}
+                className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300 disabled:opacity-40"
+                title="Previous Sentence"
               >
                 <Rewind className="w-3.5 h-3.5" />
               </button>
               <button
-                onClick={handleForward10}
+                onClick={handleNextSentence}
                 className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300"
-                title="Forward 10s"
+                title="Next Sentence"
               >
                 <FastForward className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={handleRestart}
                 className="p-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-300"
-                title="Restart"
+                title="Restart Video"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={handlePrevVideo}
+                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition text-xs font-bold flex items-center gap-1"
+                title="Previous Video Lesson"
+              >
+                <SkipBack className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Prev Video</span>
+              </button>
+              <button
+                onClick={handleNextVideo}
+                className="p-2 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 hover:bg-blue-200 transition text-xs font-bold flex items-center gap-1"
+                title="Next Video Lesson"
+              >
+                <SkipForward className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Next Video</span>
               </button>
             </div>
 
@@ -431,27 +530,28 @@ export const VideosPage: React.FC = () => {
         </div>
       </Card>
 
-      {/* Interactive Transcript */}
+      {/* Interactive Flowing Transcript (Highlights & auto-scrolls with audio) */}
       <Card className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-            <span>Interactive Lesson Transcript</span>
+            <span>Interactive Flowing Transcript ({totalSentences} Sentences)</span>
           </h3>
           <span className="text-[10px] text-slate-400">Tap line to seek</span>
         </div>
 
-        <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+        <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
           {selectedLesson.transcript.map((line, idx) => {
-            const isLineActive = activeTranscriptIndex === idx;
+            const isLineActive = activeSentenceIndex === idx;
 
             return (
               <button
                 key={idx}
-                onClick={() => handleSeek(line.seconds)}
+                id={`transcript-item-${idx}`}
+                onClick={() => handleSeekSentence(idx)}
                 className={`w-full text-left p-2.5 rounded-xl border transition group flex items-start gap-2.5 ${
                   isLineActive
-                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/60 shadow-xs'
+                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/60 shadow-xs ring-1 ring-blue-500/30'
                     : 'bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50/60 dark:hover:bg-blue-950/40 border-slate-200/60 dark:border-slate-800'
                 }`}
               >
@@ -462,7 +562,7 @@ export const VideosPage: React.FC = () => {
                       : 'bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white'
                   }`}
                 >
-                  {line.time}
+                  {line.time || `0:${idx * 15 < 10 ? '0' : ''}${idx * 15}`}
                 </span>
                 <div className="space-y-0.5 min-w-0">
                   <span
