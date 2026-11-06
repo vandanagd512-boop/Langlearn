@@ -1,0 +1,14 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[context.production.environment]
+  NETLIFY_FEEDBACK_DISABLED = "true"
+
+[context.deploy-preview.environment]
+  NETLIFY_FEEDBACK_DISABLED = "true"

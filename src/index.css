@@ -76,3 +76,15 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
+
+/* Hide Netlify Drawer / Injected Feedback Badge */
+netlify-drawer,
+[data-netlify-deploy-id],
+iframe[src*="netlify"],
+div[class*="netlify"],
+button[class*="netlify"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
