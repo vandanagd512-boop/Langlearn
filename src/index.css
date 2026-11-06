@@ -43,6 +43,27 @@
   height: 6px;
 }
 
+/* Force hide Netlify feedback drawer / badge so it never covers mobile bottom navigation */
+#netlify-feedback-widget,
+[data-netlify-feedback],
+div[class*="netlify-feedback"],
+div[class*="netlify-drawer"],
+div[class*="feedback-badge"],
+iframe[id*="netlify"],
+iframe[src*="netlify"],
+.netlify-feedback-badge {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  bottom: -9999px !important;
+  left: -9999px !important;
+  height: 0 !important;
+  width: 0 !important;
+  z-index: -999 !important;
+}
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }

@@ -1,215 +1,329 @@
-import { VideoLesson } from '../types/video.types';
+import { VideoLesson, VideoDurationCategory, VideoProficiencyLevel, VideoTopic } from '../types/video.types';
 
-export const VIDEO_LESSONS_DATA: VideoLesson[] = [
-  // 1. 2-Minute Bite-Sized Lessons
+// Curated reliable embed video streams
+const STREAM_PLAYLIST = [
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
+  'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+];
+
+// Standard educational curriculum blueprints spanning from absolute beginner to fluent
+const CURRICULUM_BLUEPRINTS: {
+  topic: VideoTopic;
+  topicLabel: string;
+  level: VideoProficiencyLevel;
+  levelLabel: string;
+  durationCategory: VideoDurationCategory;
+  durationFormatted: string;
+  durationSeconds: number;
+  xp: number;
+  titleTemplate: (lang: string) => string;
+  subTemplate: (lang: string) => string;
+  descTemplate: (lang: string) => string;
+  sampleWords: (_lang: string) => { term: string; phonetic: string; meaning: string }[];
+  transcriptGen: (_lang: string) => { time: string; seconds: number; speaker: string; text: string; translation: string }[];
+}[] = [
+  // 1. Beginner (A1)
   {
-    id: 'vid-2m-kn-1',
-    title: 'Saying Hello & Thank You in Kannada',
-    subtitle: '2-Minute Quick Polish on Everyday Etiquette',
-    description: 'Learn the acoustic tone and polite inflection for Namaskara and Dhanyavada in just 2 minutes.',
+    topic: 'alphabet',
+    topicLabel: 'Alphabet & Script',
+    level: 'beginner',
+    levelLabel: 'A1 Beginner',
     durationCategory: '2min',
     durationFormatted: '2:15',
     durationSeconds: 135,
-    languageCode: 'kn',
-    languageName: 'Kannada',
-    topic: 'conversation',
-    topicLabel: 'Daily Conversation',
-    instructor: 'Ananya Sharma',
-    instructorAvatar: '👩‍🏫',
-    xpReward: 25,
-    gradient: 'from-amber-500 to-orange-600',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    transcript: [
-      { time: '0:05', seconds: 5, speaker: 'Ananya', text: 'ನಮಸ್ಕಾರ (Namaskara) is our universal greeting in Karnataka.', translation: 'Namaskara means hello or greetings.' },
-      { time: '0:45', seconds: 45, speaker: 'Ananya', text: 'When speaking to elders, add -ri like Namaskara-ri.', translation: 'Adding -ri conveys deep respect.' },
-      { time: '1:20', seconds: 80, speaker: 'Ananya', text: 'To express sincere gratitude, say ತುಂಬಾ ಧನ್ಯವಾದಗಳು (Tumba Dhanyavadagalu).', translation: 'Tumba Dhanyavadagalu means thank you very much.' },
-      { time: '1:55', seconds: 115, speaker: 'Ananya', text: 'Good job! Now practice with your friends.', translation: 'Keep practicing daily!' },
+    xp: 25,
+    titleTemplate: (l) => `${l} Alphabet & Sound Foundations`,
+    subTemplate: (l) => `Master ${l} vowels and basic phonetics in 2 minutes`,
+    descTemplate: (l) => `Learn mouth positioning, vowel lengths, and primary acoustic tones in ${l}.`,
+    sampleWords: (_l) => [
+      { term: 'Letter 1', phonetic: 'Akshara', meaning: 'Alphabet / Syllable' },
+      { term: 'Sound', phonetic: 'Dhvani', meaning: 'Acoustic tone' },
     ],
-    keyVocabulary: [
-      { term: 'ನಮಸ್ಕಾರ', phonetic: 'Namaskara', meaning: 'Hello / Greetings' },
-      { term: 'ಧನ್ಯವಾದ', phonetic: 'Dhanyavada', meaning: 'Thank you' },
-      { term: 'ತುಂಬಾ', phonetic: 'Tumba', meaning: 'Very much / A lot' },
+    transcriptGen: (_l) => [
+      { time: '0:05', seconds: 5, speaker: 'Tutor', text: `Welcome! Today we begin our journey with script.`, translation: 'Foundational introduction.' },
+      { time: '0:45', seconds: 45, speaker: 'Tutor', text: `Notice the vowel duration: short breath vs long breath.`, translation: 'Vowel pronunciation technique.' },
+      { time: '1:30', seconds: 90, speaker: 'Tutor', text: `Practice writing each character three times.`, translation: 'Writing exercise.' },
     ],
   },
   {
-    id: 'vid-2m-hi-1',
-    title: 'Hindi Street Slang: "Jugaad" & "Bindaas"',
-    subtitle: 'Master 3 Famous Expressions in 2 Minutes',
-    description: 'Decode the most popular colloquial Hindi words you will hear across Indian cities.',
+    topic: 'conversation',
+    topicLabel: 'Daily Greetings',
+    level: 'beginner',
+    levelLabel: 'A1 Beginner',
     durationCategory: '2min',
-    durationFormatted: '2:05',
-    durationSeconds: 125,
-    languageCode: 'hi',
-    languageName: 'Hindi',
+    durationFormatted: '2:30',
+    durationSeconds: 150,
+    xp: 25,
+    titleTemplate: (l) => `Saying Hello, Welcome & Goodbye in ${l}`,
+    subTemplate: (l) => `Everyday polite social greetings in ${l}`,
+    descTemplate: (l) => `Sound natural and polite when meeting locals and friends in ${l}.`,
+    sampleWords: (_l) => [
+      { term: 'Greeting', phonetic: 'Namaskara', meaning: 'Hello / Greetings' },
+      { term: 'Thank you', phonetic: 'Dhanyavada', meaning: 'Gratitude' },
+    ],
+    transcriptGen: (_l) => [
+      { time: '0:10', seconds: 10, speaker: 'Tutor', text: `Always greet with a warm smile when speaking.`, translation: 'Cultural greeting habit.' },
+      { time: '0:50', seconds: 50, speaker: 'Tutor', text: `To say goodbye respectfully, use traditional polite forms.`, translation: 'Polite leave-taking.' },
+    ],
+  },
+  {
     topic: 'conversation',
-    topicLabel: 'Daily Slang',
-    instructor: 'Kabir Verma',
-    instructorAvatar: '🧑‍🏫',
-    xpReward: 25,
-    gradient: 'from-rose-500 to-pink-600',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
-    transcript: [
-      { time: '0:10', seconds: 10, speaker: 'Kabir', text: 'The word "Jugaad" (जुगाड़) means an innovative, clever fix.', translation: 'A smart hack or improvised solution.' },
-      { time: '0:50', seconds: 50, speaker: 'Kabir', text: '"Bindaas" (बिंदास) means carefree, cool, and confident.', translation: 'Carefree or without stress.' },
-      { time: '1:30', seconds: 90, speaker: 'Kabir', text: 'Try using them naturally in casual conversations!', translation: 'Use these with peers and friends.' },
-    ],
-    keyVocabulary: [
-      { term: 'जुगाड़', phonetic: 'Jugaad', meaning: 'Clever fix / Workaround' },
-      { term: 'बिंदास', phonetic: 'Bindaas', meaning: 'Cool / Carefree' },
-    ],
-  },
-
-  // 2. 5-Minute Core Lessons
-  {
-    id: 'vid-5m-kn-1',
-    title: 'Ordering Coffee & Food at a Bengaluru Darshini',
-    subtitle: '5-Minute Practical Cafe Ordering Simulation',
-    description: 'Step into an authentic South Indian cafe. Learn how to ask for hot filter coffee, crispy dosas, and the bill without hesitation.',
-    durationCategory: '5min',
-    durationFormatted: '5:20',
-    durationSeconds: 320,
-    languageCode: 'kn',
-    languageName: 'Kannada',
-    topic: 'food',
-    topicLabel: 'Food & Dining',
-    instructor: 'Praveen Gowda',
-    instructorAvatar: '👨‍🍳',
-    xpReward: 40,
-    gradient: 'from-blue-600 to-indigo-600',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
-    transcript: [
-      { time: '0:15', seconds: 15, speaker: 'Praveen', text: 'Walking up to the counter, ask: "ಒಂದು ಬಿಸಿ ಫಿಲ್ಟರ್ ಕಾಫಿ ಕೊಡಿ" (Ondu bisi filter coffee kodi).', translation: 'Please give one hot filter coffee.' },
-      { time: '1:10', seconds: 70, speaker: 'Praveen', text: 'Notice the word "ಕೊಡಿ" (Kodi) means give, which is polite.', translation: 'Kodi is the polite imperative.' },
-      { time: '2:30', seconds: 150, speaker: 'Praveen', text: 'To order a masala dosa: "ಒಂದು ಮಸಾಲೆ ದೋಸೆ ಪಾರ್ಸಲ್ ಮಾಡಿ".', translation: 'Pack one masala dosa for takeaway.' },
-      { time: '3:45', seconds: 225, speaker: 'Praveen', text: 'Finally, ask for the bill: "ಎಷ್ಟು ಆಯ್ತು?" (Eshtu aaythu?).', translation: 'How much did it come to?' },
-      { time: '4:50', seconds: 290, speaker: 'Praveen', text: 'Pay with UPI and say "ಧನ್ಯವಾದಗಳು!"', translation: 'Say thank you and enjoy your meal!' },
-    ],
-    keyVocabulary: [
-      { term: 'ಬಿಸಿ', phonetic: 'Bisi', meaning: 'Hot (temperature)' },
-      { term: 'ಕೊಡಿ', phonetic: 'Kodi', meaning: 'Please give' },
-      { term: 'ಎಷ್ಟು ಆಯ್ತು?', phonetic: 'Eshtu aaythu?', meaning: 'How much did it cost?' },
-    ],
-  },
-  {
-    id: 'vid-5m-ta-1',
-    title: 'Auto Rickshaw & Taxi Bargaining in Chennai',
-    subtitle: '5-Minute Real-World Commuter Guide',
-    description: 'Learn the exact Tamil phrases used to agree on auto fares, confirm destinations, and give street directions.',
+    topicLabel: 'Self Introductions',
+    level: 'beginner',
+    levelLabel: 'A1 Beginner',
     durationCategory: '5min',
     durationFormatted: '5:10',
     durationSeconds: 310,
-    languageCode: 'ta',
-    languageName: 'Tamil',
-    topic: 'travel',
-    topicLabel: 'Travel & Navigation',
-    instructor: 'Karthik Raja',
-    instructorAvatar: '🛺',
-    xpReward: 40,
-    gradient: 'from-emerald-600 to-teal-600',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4',
-    transcript: [
-      { time: '0:20', seconds: 20, speaker: 'Karthik', text: 'Flag down an auto and say: "அண்ணா, டி. நகர் போவீங்களா?" (Anna, T. Nagar poveengala?).', translation: 'Brother, will you go to T. Nagar?' },
-      { time: '1:40', seconds: 100, speaker: 'Karthik', text: 'Always ask for the meter: "மீட்டர் போடுங்க அண்ணா" (Meter podunga anna).', translation: 'Please turn on the meter, brother.' },
-      { time: '3:15', seconds: 195, speaker: 'Karthik', text: 'Giving directions: "இடது பக்கம் திரும்புங்க" (Idadhu pakkam thirumbunga) means turn left.', translation: 'Turn left.' },
-      { time: '4:30', seconds: 270, speaker: 'Karthik', text: '"இங்கே நிறுத்துங்க" (Inge niruthunga) means stop right here.', translation: 'Please stop here.' },
+    xp: 40,
+    titleTemplate: (l) => `Introduce Yourself with Confidence in ${l}`,
+    subTemplate: (l) => `State your name, hometown, and profession in ${l}`,
+    descTemplate: (l) => `A complete 5-minute template to introduce yourself fluently in ${l}.`,
+    sampleWords: (_l) => [
+      { term: 'Name', phonetic: 'Hesaru / Naam', meaning: 'Name' },
+      { term: 'Hometown', phonetic: 'Ooru / Shahr', meaning: 'Town / City' },
     ],
-    keyVocabulary: [
-      { term: 'அண்ணா', phonetic: 'Anna', meaning: 'Elder brother (respectful greeting)' },
-      { term: 'போவீங்களா?', phonetic: 'Poveengala?', meaning: 'Will you go?' },
-      { term: 'நிறுத்துங்க', phonetic: 'Niruthunga', meaning: 'Please stop' },
+    transcriptGen: (_l) => [
+      { time: '0:15', seconds: 15, speaker: 'Tutor', text: `Step 1: State your name clearly.`, translation: 'Name template.' },
+      { time: '1:30', seconds: 90, speaker: 'Tutor', text: `Step 2: Tell where you are from.`, translation: 'Origin phrase.' },
+      { time: '3:00', seconds: 180, speaker: 'Tutor', text: `Step 3: State your work or study with pride.`, translation: 'Profession phrase.' },
     ],
   },
 
-  // 3. 10-Minute Deep Dive Lessons
+  // 2. Elementary (A2)
   {
-    id: 'vid-10m-kn-1',
-    title: 'Complete Kannada Alphabet & Acoustic Masterclass',
-    subtitle: '10-Minute Deep Dive into Vowels & Consonants',
-    description: 'Master all 14 Swaras (vowels), Yogavahakas, and primary Vyanjanas with detailed mouth positioning and phonetic breakdowns.',
-    durationCategory: '10min',
-    durationFormatted: '10:45',
-    durationSeconds: 645,
-    languageCode: 'kn',
-    languageName: 'Kannada',
-    topic: 'alphabet',
-    topicLabel: 'Script & Phonetics',
-    instructor: 'Dr. Sharada Hegde',
-    instructorAvatar: '👩‍🏫',
-    xpReward: 60,
-    gradient: 'from-purple-600 to-indigo-700',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4',
-    transcript: [
-      { time: '0:30', seconds: 30, speaker: 'Dr. Hegde', text: 'Kannada script is phonetic — you pronounce exactly what you write.', translation: 'Every character has a distinct acoustic value.' },
-      { time: '2:15', seconds: 135, speaker: 'Dr. Hegde', text: 'The short vowel "ಅ" (A) vs long vowel "ಆ" (Aa). Hear the breath duration difference.', translation: 'A vs Aa duration difference.' },
-      { time: '4:40', seconds: 280, speaker: 'Dr. Hegde', text: 'Moving to guttural consonants: ಕ (Ka), ಖ (Kha), ಗ (Ga), ಘ (Gha).', translation: 'Velar/Guttural consonant series.' },
-      { time: '7:20', seconds: 440, speaker: 'Dr. Hegde', text: 'Notice retroflex letters like ಟ (Ta) and ಣ (Na) where tongue curls backwards.', translation: 'Retroflex tongue placement.' },
-      { time: '9:50', seconds: 590, speaker: 'Dr. Hegde', text: 'Combine vowels with consonants to form Kagunitha syllabaries.', translation: 'Forming complete syllables.' },
+    topic: 'food',
+    topicLabel: 'Food & Dining Out',
+    level: 'elementary',
+    levelLabel: 'A2 Elementary',
+    durationCategory: '5min',
+    durationFormatted: '5:45',
+    durationSeconds: 345,
+    xp: 45,
+    titleTemplate: (l) => `Ordering Food & Filter Coffee in ${l}`,
+    subTemplate: (l) => `Dishes, spices, and asking for the bill in ${l}`,
+    descTemplate: (l) => `Master restaurant ordering phrases, dietary preferences, and billing in ${l}.`,
+    sampleWords: (_l) => [
+      { term: 'Food / Meal', phonetic: 'Oota / Khaana', meaning: 'Meal' },
+      { term: 'Water', phonetic: 'Neeru / Paani', meaning: 'Water' },
+      { term: 'How much is it?', phonetic: 'Eshtu aaythu?', meaning: 'Bill inquiry' },
     ],
-    keyVocabulary: [
-      { term: 'ಸ್ವರ', phonetic: 'Swara', meaning: 'Vowel' },
-      { term: 'ವ್ಯಂಜನ', phonetic: 'Vyanjana', meaning: 'Consonant' },
-      { term: 'ಕಾಗುಣಿತ', phonetic: 'Kagunitha', meaning: 'Syllabic combination chart' },
+    transcriptGen: (_l) => [
+      { time: '0:20', seconds: 20, speaker: 'Tutor', text: `Ask for a table or takeaway cleanly.`, translation: 'Seating and orders.' },
+      { time: '2:15', seconds: 135, speaker: 'Tutor', text: `Specify spice level: less spicy or more spicy.`, translation: 'Taste customization.' },
+      { time: '4:20', seconds: 260, speaker: 'Tutor', text: `Ask for the check and pay with digital QR.`, translation: 'Bill payment.' },
     ],
   },
   {
-    id: 'vid-10m-hi-1',
-    title: 'Hindi Tenses & Verb Conjugations Unlocked',
-    subtitle: '10-Minute Systematic Grammar Breakdown',
-    description: 'Never mix up "karta hoon", "kar raha hoon", and "karunga" again. Master present, continuous, and future tenses.',
+    topic: 'travel',
+    topicLabel: 'Auto & Cab Commuting',
+    level: 'elementary',
+    levelLabel: 'A2 Elementary',
+    durationCategory: '5min',
+    durationFormatted: '5:20',
+    durationSeconds: 320,
+    xp: 45,
+    titleTemplate: (l) => `Auto Rickshaw Fares & Navigation in ${l}`,
+    subTemplate: (l) => `Bargaining, meter requests, and turn directions in ${l}`,
+    descTemplate: (l) => `Commute stress-free across cities using essential ${l} vocabulary.`,
+    sampleWords: (_l) => [
+      { term: 'Left / Right', phonetic: 'Edadu / Baladu', meaning: 'Direction' },
+      { term: 'Stop here', phonetic: 'Nillisi / Roko', meaning: 'Stop' },
+    ],
+    transcriptGen: (_l) => [
+      { time: '0:25', seconds: 25, speaker: 'Tutor', text: `Flagging down an auto: confirm the destination first.`, translation: 'Ride confirmation.' },
+      { time: '2:10', seconds: 130, speaker: 'Tutor', text: `Giving turn by turn directions: left, right, straight.`, translation: 'Direction guidance.' },
+    ],
+  },
+  {
+    topic: 'grammar',
+    topicLabel: 'Numbers & Marketplace',
+    level: 'elementary',
+    levelLabel: 'A2 Elementary',
     durationCategory: '10min',
     durationFormatted: '10:15',
     durationSeconds: 615,
-    languageCode: 'hi',
-    languageName: 'Hindi',
-    topic: 'grammar',
-    topicLabel: 'Grammar Foundations',
-    instructor: 'Vikram Sethi',
-    instructorAvatar: '👨‍🏫',
-    xpReward: 60,
-    gradient: 'from-teal-600 to-cyan-700',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
-    transcript: [
-      { time: '0:40', seconds: 40, speaker: 'Vikram', text: 'Hindi verbs conjugate based on gender (masculine/feminine) and formality.', translation: 'Subject agreement rule.' },
-      { time: '2:50', seconds: 170, speaker: 'Vikram', text: 'Habitual present: "मैं रोज पढ़ता हूँ" (I read every day).', translation: 'Simple present with -ta/-ti hoon.' },
-      { time: '5:30', seconds: 330, speaker: 'Vikram', text: 'Continuous present: "मैं अभी वीडियो देख रहा हूँ" (I am watching right now).', translation: 'Present continuous with raha/rahi.' },
-      { time: '8:10', seconds: 490, speaker: 'Vikram', text: 'Future tense: "कल हम नया पाठ सीखेंगे" (Tomorrow we will learn a new lesson).', translation: 'Future with -enge.' },
+    xp: 55,
+    titleTemplate: (l) => `Numbers 1 to 100 & Marketplace in ${l}`,
+    subTemplate: (l) => `Counting, currency, weights, and negotiations in ${l}`,
+    descTemplate: (l) => `Learn how to count quickly, ask for discounts, and buy fresh groceries in ${l}.`,
+    sampleWords: (_l) => [
+      { term: 'One, Two, Three', phonetic: 'Ondu, Eradu, Mooru', meaning: '1, 2, 3' },
+      { term: 'Kilo', phonetic: 'Kilo', meaning: 'Weight measurement' },
+      { term: 'Discount', phonetic: 'Kammi maadi', meaning: 'Reduce price' },
     ],
-    keyVocabulary: [
-      { term: 'काल', phonetic: 'Kaal', meaning: 'Tense / Time' },
-      { term: 'क्रिया', phonetic: 'Kriya', meaning: 'Verb / Action' },
-      { term: 'वाक्य', phonetic: 'Vaakya', meaning: 'Sentence' },
+    transcriptGen: (_l) => [
+      { time: '0:30', seconds: 30, speaker: 'Tutor', text: `Counting groups of 10s: 10, 20, 30, 40...`, translation: 'Multiples of ten.' },
+      { time: '4:15', seconds: 255, speaker: 'Tutor', text: `Asking for fresh produce at the market.`, translation: 'Quality inquiry.' },
+      { time: '7:40', seconds: 460, speaker: 'Tutor', text: `Politely negotiating a fair price without offending.`, translation: 'Negotiation skill.' },
     ],
   },
 
-  // 4. 15-Minute Masterclass
+  // 3. Intermediate (B1)
   {
-    id: 'vid-15m-kn-1',
-    title: 'Fluent Daily Conversations: Social Etiquette & Family Bonds',
-    subtitle: '15-Minute Immersive Real-Life Dialogue Masterclass',
-    description: 'An advanced conversational masterclass covering family gatherings, meeting neighbors, polite declines, and complimenting food.',
-    durationCategory: '15min',
-    durationFormatted: '15:30',
-    durationSeconds: 930,
-    languageCode: 'kn',
-    languageName: 'Kannada',
-    topic: 'conversation',
-    topicLabel: 'Cultural Immersion',
-    instructor: 'Meera Rao',
-    instructorAvatar: '👩‍💼',
-    xpReward: 100,
-    gradient: 'from-emerald-700 to-green-800',
-    videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
-    transcript: [
-      { time: '1:00', seconds: 60, speaker: 'Meera', text: 'Visiting an Indian home: always ask "ಮನೆಯಲ್ಲಿ ಎಲ್ಲರೂ ಆರಾಮವೇ?" (Is everyone well at home?).', translation: 'Greeting family members politely.' },
-      { time: '4:20', seconds: 260, speaker: 'Meera', text: 'Complimenting the home-cooked food: "ಅಡಿಗೆ ತುಂಬಾ ರುಚಿಯಾಗಿದೆ" (The food is delicious!).', translation: 'Telling host the meal is delicious.' },
-      { time: '8:40', seconds: 520, speaker: 'Meera', text: 'Politely declining extra servings: "ಸಾಕು ಅಮ್ಮ, ಹೊಟ್ಟೆ ತುಂಬಿತು" (Enough, mother, my stomach is full).', translation: 'Polite refusal of seconds.' },
-      { time: '13:10', seconds: 790, speaker: 'Meera', text: 'Taking leave: never say goodbye, say "ಮತ್ತೆ ಬರ್ತೀನಿ" (I will return again).', translation: 'Traditional departure etiquette.' },
+    topic: 'grammar',
+    topicLabel: 'Verb Tenses Masterclass',
+    level: 'intermediate',
+    levelLabel: 'B1 Intermediate',
+    durationCategory: '10min',
+    durationFormatted: '10:30',
+    durationSeconds: 630,
+    xp: 65,
+    titleTemplate: (l) => `Past, Present & Future Tenses in ${l}`,
+    subTemplate: (l) => `Conjugations with subject agreement in ${l}`,
+    descTemplate: (l) => `Never mix up tenses again with simple formulaic patterns in ${l}.`,
+    sampleWords: (_l) => [
+      { term: 'I will go', phonetic: 'Hoguttene / Jaoonga', meaning: 'Future action' },
+      { term: 'I went', phonetic: 'Hode / Gaya', meaning: 'Past action' },
+      { term: 'I am doing', phonetic: 'Maduttiddene / Kar raha hoon', meaning: 'Present continuous' },
     ],
-    keyVocabulary: [
-      { term: 'ಆರಾಮ', phonetic: 'Aaraama', meaning: 'Well / Comfortable' },
-      { term: 'ರುಚಿ', phonetic: 'Ruchi', meaning: 'Taste / Delicious' },
-      { term: 'ಸಾಕು', phonetic: 'Saaku', meaning: 'Enough' },
-      { term: 'ಮತ್ತೆ ಬರ್ತೀನಿ', phonetic: 'Matte barteeni', meaning: 'I will visit again' },
+    transcriptGen: (_l) => [
+      { time: '0:40', seconds: 40, speaker: 'Tutor', text: `Root verbs and tense suffixes.`, translation: 'Suffix patterns.' },
+      { time: '3:50', seconds: 230, speaker: 'Tutor', text: `Subject pronoun agreement: I vs You vs They.`, translation: 'Pronoun rules.' },
+      { time: '7:15', seconds: 435, speaker: 'Tutor', text: `Real-life conversational sentences switching between tenses.`, translation: 'Story flow.' },
+    ],
+  },
+  {
+    topic: 'slang',
+    topicLabel: 'Modern Slang & Idioms',
+    level: 'intermediate',
+    levelLabel: 'B1 Intermediate',
+    durationCategory: '10min',
+    durationFormatted: '9:50',
+    durationSeconds: 590,
+    xp: 60,
+    titleTemplate: (l) => `Modern Colloquial Slang & Idioms in ${l}`,
+    subTemplate: (l) => `Talk like youth and friends in ${l}`,
+    descTemplate: (l) => `Catchy regional expressions, popular movie references, and casual fillers in ${l}.`,
+    sampleWords: (_l) => [
+      { term: 'Awesome / Super', phonetic: 'Sakkath / Gazab', meaning: 'Fantastic' },
+      { term: 'Relax / Chill', phonetic: 'Bindaas / Aaraam', meaning: 'Take it easy' },
+    ],
+    transcriptGen: (_l) => [
+      { time: '0:35', seconds: 35, speaker: 'Tutor', text: `Why textbook language differs from real street conversations.`, translation: 'Colloquial evolution.' },
+      { time: '4:10', seconds: 250, speaker: 'Tutor', text: `Expressing excitement and awe naturally.`, translation: 'Positive slang.' },
+      { time: '7:30', seconds: 450, speaker: 'Tutor', text: `Humorous idioms you will hear in movies and podcasts.`, translation: 'Pop culture phrases.' },
+    ],
+  },
+  {
+    topic: 'conversation',
+    topicLabel: 'Office Communication',
+    level: 'intermediate',
+    levelLabel: 'B1 Intermediate',
+    durationCategory: '10min',
+    durationFormatted: '11:15',
+    durationSeconds: 675,
+    xp: 70,
+    titleTemplate: (l) => `Workplace & Professional Communication in ${l}`,
+    subTemplate: (l) => `Meetings and formal requests in ${l}`,
+    descTemplate: (l) => `Build trust with local teams and clients with polite business etiquette in ${l}.`,
+    sampleWords: (_l) => [
+      { term: 'Meeting', phonetic: 'Sabhe / Baithak', meaning: 'Assembly / Meeting' },
+      { term: 'Work / Task', phonetic: 'Kelasa / Kaam', meaning: 'Assignment' },
+    ],
+    transcriptGen: (_l) => [
+      { time: '0:45', seconds: 45, speaker: 'Tutor', text: `Formal vs informal address in office settings.`, translation: 'Workplace hierarchy.' },
+      { time: '5:20', seconds: 320, speaker: 'Tutor', text: `Asking for deadlines and status updates politely.`, translation: 'Collaboration inquiry.' },
+    ],
+  },
+
+  // 4. Fluent / Advanced (C1)
+  {
+    topic: 'culture',
+    topicLabel: 'Cultural Immersion',
+    level: 'fluent',
+    levelLabel: 'C1 Fluent',
+    durationCategory: '15min',
+    durationFormatted: '15:20',
+    durationSeconds: 920,
+    xp: 100,
+    titleTemplate: (l) => `Cultural Immersion & Family Etiquette in ${l}`,
+    subTemplate: (l) => `Weddings, festivals, and hospitality in ${l}`,
+    descTemplate: (l) => `An advanced 15-minute immersive dialogue covering traditions and festivals in ${l}.`,
+    sampleWords: (_l) => [
+      { term: 'Festival', phonetic: 'Habba / Tyohar', meaning: 'Celebration' },
+      { term: 'Hospitality', phonetic: 'Aatithya', meaning: 'Welcoming guests' },
+      { term: 'Blessing', phonetic: 'Aashirvada', meaning: 'Elder blessing' },
+    ],
+    transcriptGen: (_l) => [
+      { time: '1:00', seconds: 60, speaker: 'Tutor', text: `Entering an Indian family home: greeting elders respectfully.`, translation: 'Family etiquette.' },
+      { time: '5:30', seconds: 330, speaker: 'Tutor', text: `Complimenting homemade festive dishes with rich vocabulary.`, translation: 'Culinary praise.' },
+      { time: '10:15', seconds: 615, speaker: 'Tutor', text: `Participating in cultural festival conversations and well-wishes.`, translation: 'Festive exchange.' },
+      { time: '13:50', seconds: 830, speaker: 'Tutor', text: `Politely saying farewell with traditional parting phrases.`, translation: 'Warm departure.' },
+    ],
+  },
+  {
+    topic: 'conversation',
+    topicLabel: 'Rapid Native Fluency',
+    level: 'fluent',
+    levelLabel: 'C1 Fluent',
+    durationCategory: '15min',
+    durationFormatted: '14:50',
+    durationSeconds: 890,
+    xp: 100,
+    titleTemplate: (l) => `Rapid Native Storytelling & Fluency in ${l}`,
+    subTemplate: (l) => `Express complex opinions and humor in ${l}`,
+    descTemplate: (l) => `Learn sentence connectors, transition words, and narrative flow in ${l}.`,
+    sampleWords: (_l) => [
+      { term: 'Story / Tale', phonetic: 'Kathe / Kahaani', meaning: 'Narrative' },
+      { term: 'Opinion', phonetic: 'Abhipraya / Raye', meaning: 'Personal view' },
+      { term: 'However / But', phonetic: 'Aadare / Lekin', meaning: 'Conjunction' },
+    ],
+    transcriptGen: (_l) => [
+      { time: '1:15', seconds: 75, speaker: 'Tutor', text: `Narrative hooks: how to start a story captively.`, translation: 'Story opening.' },
+      { time: '6:40', seconds: 400, speaker: 'Tutor', text: `Using connectors like "because of that", "meanwhile", and "eventually".`, translation: 'Flow connectors.' },
+      { time: '11:20', seconds: 680, speaker: 'Tutor', text: `Sharing opinions with nuance, tact, and humor.`, translation: 'Nuanced debate.' },
     ],
   },
 ];
+
+// Languages to generate the full 100+ curriculum for
+const SUPPORTED_LANGUAGES_META = [
+  { code: 'kn', name: 'Kannada', instructor: 'Ananya Sharma', avatar: '👩‍🏫', gradient: 'from-amber-500 to-orange-600' },
+  { code: 'hi', name: 'Hindi', instructor: 'Kabir Verma', avatar: '🧑‍🏫', gradient: 'from-rose-500 to-red-600' },
+  { code: 'ta', name: 'Tamil', instructor: 'Karthik Raja', avatar: '👨‍🏫', gradient: 'from-emerald-600 to-teal-700' },
+  { code: 'te', name: 'Telugu', instructor: 'Sravani Rao', avatar: '👩‍💼', gradient: 'from-blue-600 to-indigo-700' },
+  { code: 'ml', name: 'Malayalam', instructor: 'Arun Menon', avatar: '👨‍🎨', gradient: 'from-teal-600 to-cyan-700' },
+  { code: 'mr', name: 'Marathi', instructor: 'Pooja Kulkarni', avatar: '👩‍🎓', gradient: 'from-purple-600 to-pink-600' },
+  { code: 'bn', name: 'Bengali', instructor: 'Sourav Ganguly', avatar: '👨‍💼', gradient: 'from-amber-600 to-yellow-600' },
+  { code: 'gu', name: 'Gujarati', instructor: 'Neha Patel', avatar: '👩‍⚕️', gradient: 'from-emerald-500 to-green-600' },
+  { code: 'pa', name: 'Punjabi', instructor: 'Harpreet Singh', avatar: '👳‍♂️', gradient: 'from-orange-500 to-amber-600' },
+  { code: 'en', name: 'English', instructor: 'Sarah Jenkins', avatar: '👩‍🏫', gradient: 'from-blue-700 to-indigo-800' },
+];
+
+// Build complete 100+ lesson database
+export const ALL_VIDEO_LESSONS: VideoLesson[] = [];
+
+let globalIndex = 0;
+for (const lang of SUPPORTED_LANGUAGES_META) {
+  for (const bp of CURRICULUM_BLUEPRINTS) {
+    globalIndex++;
+    const streamUrl = STREAM_PLAYLIST[globalIndex % STREAM_PLAYLIST.length];
+
+    ALL_VIDEO_LESSONS.push({
+      id: `vid-${lang.code}-${bp.level}-${globalIndex}`,
+      title: bp.titleTemplate(lang.name),
+      subtitle: bp.subTemplate(lang.name),
+      description: bp.descTemplate(lang.name),
+      durationCategory: bp.durationCategory,
+      durationFormatted: bp.durationFormatted,
+      durationSeconds: bp.durationSeconds,
+      level: bp.level,
+      levelLabel: bp.levelLabel,
+      languageCode: lang.code,
+      languageName: lang.name,
+      topic: bp.topic,
+      topicLabel: bp.topicLabel,
+      instructor: lang.instructor,
+      instructorAvatar: lang.avatar,
+      xpReward: bp.xp,
+      gradient: lang.gradient,
+      embedType: 'stream',
+      videoUrl: streamUrl,
+      transcript: bp.transcriptGen(lang.name),
+      keyVocabulary: bp.sampleWords(lang.name),
+    });
+  }
+}

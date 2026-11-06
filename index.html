@@ -30,6 +30,31 @@
   <body class="bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100 selection:bg-blue-500 selection:text-white min-h-screen">
     <div id="root"></div>
     <script>
+      // Instantly remove Netlify drawer and feedback badge to preserve mobile layout
+      (function() {
+        const removeNetlifyWidgets = () => {
+          const selectors = [
+            '#netlify-feedback-widget',
+            '[data-netlify-feedback]',
+            'div[class*="netlify-feedback"]',
+            'div[class*="netlify-drawer"]',
+            'div[class*="feedback-badge"]',
+            'iframe[id*="netlify"]',
+            'iframe[src*="netlify"]'
+          ];
+          try {
+            document.querySelectorAll(selectors.join(',')).forEach(el => el.remove());
+          } catch(e) {}
+        };
+        setInterval(removeNetlifyWidgets, 400);
+        window.addEventListener('DOMContentLoaded', () => {
+          removeNetlifyWidgets();
+          const obs = new MutationObserver(removeNetlifyWidgets);
+          obs.observe(document.body || document.documentElement, { childList: true, subtree: true });
+        });
+      })();
+    </script>
+    <script>
       if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('./sw.js').catch(() => {});
