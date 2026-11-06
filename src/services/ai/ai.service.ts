@@ -48,7 +48,7 @@ export class AIService {
       throw new Error('MISSING_API_KEY');
     }
 
-    const systemPrompt = `You are ${teacherName}, an expert language teacher teaching ${targetLanguage}.
+    const systemPrompt = `You are ${teacherName}, an expert native language teacher teaching ${targetLanguage}.
 A student just said or asked you: "${studentInput}".
 Analyze their input and reply as an encouraging, pedagogical language tutor.
 CRITICAL FORMAT INSTRUCTIONS:
@@ -59,56 +59,62 @@ The JSON must have these exact keys:
   "romanized": "Phonetic transliteration of the native response so an English speaker can pronounce it",
   "english": "English translation of your answer",
   "feedback": "Short feedback on student pronunciation or grammar (1 sentence)",
-  "score": 95
+  "score": 96
 }
 Keep the native response concise (1 to 2 sentences max) so it can be spoken aloud naturally.`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash'];
+    let lastError: Error | null = null;
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: 'user',
-            parts: [{ text: systemPrompt }],
+    for (const model of models) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey,
           },
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 350,
-          responseMimeType: 'application/json',
-        },
-      }),
-    });
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: systemPrompt }],
+              },
+            ],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 350,
+              responseMimeType: 'application/json',
+            },
+          }),
+        });
 
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      const msg = errData?.error?.message || `HTTP ${res.status}`;
-      throw new Error(`Gemini API Error: ${msg}`);
+        if (res.ok) {
+          const data = await res.json();
+          const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+          const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+          const parsed = JSON.parse(cleaned);
+          if (parsed.native) {
+            return {
+              native: parsed.native,
+              romanized: parsed.romanized || '',
+              english: parsed.english || '',
+              feedback: parsed.feedback,
+              score: parsed.score || 96,
+            };
+          }
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          lastError = new Error(errData?.error?.message || `HTTP ${res.status}`);
+        }
+      } catch (err) {
+        lastError = err as Error;
+      }
     }
 
-    const data = await res.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-    const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-
-    try {
-      const parsed = JSON.parse(cleaned);
-      return {
-        native: parsed.native || 'ತುಂಬಾ ಒಳ್ಳೆಯ ಪ್ರಯತ್ನ!',
-        romanized: parsed.romanized || 'Tumba olleya prayathna!',
-        english: parsed.english || 'Very good effort!',
-        feedback: parsed.feedback,
-        score: parsed.score || 95,
-      };
-    } catch {
-      return {
-        native: rawText.slice(0, 150),
-        romanized: '',
-        english: 'Great response from teacher!',
-        score: 95,
-      };
-    }
+    throw lastError || new Error('All Gemini models failed');
   }
 }
