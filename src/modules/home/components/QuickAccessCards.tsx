@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Compass, Languages, Sparkles, Video, ArrowRight } from 'lucide-react';
+import { Compass, Languages, MessageSquare, Video, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export const QuickAccessCards: React.FC = () => {
@@ -14,14 +14,14 @@ export const QuickAccessCards: React.FC = () => {
       subtitle: 'Skill roadmap & lessons',
       icon: Compass,
       path: '/learn',
-      badge: 'Core',
+      badge: 'Path',
       color: 'blue' as const,
       gradient: 'from-blue-600 to-indigo-600',
     },
     {
       id: 'translator',
       title: 'Translator',
-      subtitle: 'Neural multi-language AI',
+      subtitle: 'Live neural AI engine',
       icon: Languages,
       path: '/translator',
       badge: 'Live',
@@ -29,24 +29,24 @@ export const QuickAccessCards: React.FC = () => {
       gradient: 'from-emerald-600 to-teal-600',
     },
     {
-      id: 'practice',
-      title: 'Practice',
-      subtitle: 'Flashcards & Speech Lab',
-      icon: Sparkles,
-      path: '/practice',
-      badge: 'Arena',
-      color: 'amber' as const,
-      gradient: 'from-amber-500 to-orange-600',
-    },
-    {
       id: 'videos',
-      title: 'Courses',
-      subtitle: 'Syllabus & curriculum',
+      title: 'Videos',
+      subtitle: '2m, 5m, 10m masterclasses',
       icon: Video,
-      path: '/courses',
-      badge: 'Units',
+      path: '/videos',
+      badge: 'Academy',
       color: 'purple' as const,
       gradient: 'from-purple-600 to-pink-600',
+    },
+    {
+      id: 'conversation',
+      title: 'AI Roleplay',
+      subtitle: 'Native conversation partner',
+      icon: MessageSquare,
+      path: '/conversation',
+      badge: 'AI Coach',
+      color: 'amber' as const,
+      gradient: 'from-amber-500 to-orange-600',
     },
   ];
 

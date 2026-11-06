@@ -69,10 +69,10 @@ export const AchievementsPreview: React.FC<AchievementsPreviewProps> = ({ summar
         </div>
 
         <button
-          onClick={() => navigate('/progress')}
+          onClick={() => navigate('/leaderboard')}
           className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
         >
-          <span>View Badges</span>
+          <span>View League</span>
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>

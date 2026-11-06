@@ -53,6 +53,15 @@ const ProfilePage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('@/modules/settings/pages/SettingsPage').then((m) => ({ default: m.SettingsPage }))
 );
+const VideosPage = lazy(() =>
+  import('@/modules/videos/pages/VideosPage').then((m) => ({ default: m.VideosPage }))
+);
+const ConversationPage = lazy(() =>
+  import('@/modules/conversation/pages/ConversationPage').then((m) => ({ default: m.ConversationPage }))
+);
+const LeaderboardPage = lazy(() =>
+  import('@/modules/leaderboard/pages/LeaderboardPage').then((m) => ({ default: m.LeaderboardPage }))
+);
 const AdminPage = lazy(() =>
   import('@/modules/admin/pages/AdminPage').then((m) => ({ default: m.AdminPage }))
 );
@@ -143,6 +152,18 @@ export const router = createBrowserRouter([
       {
         path: 'settings',
         element: suspenseWrap(SettingsPage),
+      },
+      {
+        path: 'videos',
+        element: suspenseWrap(VideosPage),
+      },
+      {
+        path: 'conversation',
+        element: suspenseWrap(ConversationPage),
+      },
+      {
+        path: 'leaderboard',
+        element: suspenseWrap(LeaderboardPage),
       },
       {
         path: 'admin',

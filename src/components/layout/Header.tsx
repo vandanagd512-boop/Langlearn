@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { useAppStore } from '@/state/store';
-import { Sun, Moon, Flame } from 'lucide-react';
+import { Sun, Moon, Flame, Trophy } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { SUPPORTED_LANGUAGES } from '@/config/constants';
 import { Link } from 'react-router-dom';
@@ -60,6 +60,15 @@ export const Header: React.FC = () => {
             <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
             <span>{user?.streakDays ?? 3}d</span>
           </div>
+
+          {/* Leaderboard Trophy Link */}
+          <Link
+            to="/leaderboard"
+            className="p-1.5 text-slate-500 hover:text-yellow-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition active:scale-95"
+            title="Weekly Leaderboard & Leagues"
+          >
+            <Trophy className="w-4 h-4 text-yellow-500" />
+          </Link>
 
           {/* Theme Switcher */}
           <button
