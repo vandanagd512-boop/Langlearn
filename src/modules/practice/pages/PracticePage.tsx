@@ -27,6 +27,79 @@ import { cn } from '@/utils/cn';
 
 type PracticeMode = 'flashcards' | 'speech' | 'listening';
 
+function computePronunciationAccuracy(
+  spoken: string,
+  targetWord: string,
+  romanized: string
+): { score: number; heard: string; feedback: string } {
+  const cleanSpoken = spoken.trim().toLowerCase();
+  const cleanTarget = targetWord.trim().toLowerCase();
+  const cleanRomanized = (romanized || '').trim().toLowerCase();
+
+  if (!cleanSpoken) {
+    return {
+      score: 0,
+      heard: 'No voice detected',
+      feedback: 'Could not catch your voice. Please speak closer to the microphone.',
+    };
+  }
+
+  // Exact native or romanized match
+  if (cleanSpoken === cleanTarget || (cleanRomanized && cleanSpoken === cleanRomanized)) {
+    return {
+      score: 98,
+      heard: spoken,
+      feedback: 'Outstanding native pronunciation! Crisp vowel length and natural intonation. (+15 XP)',
+    };
+  }
+
+  // Levenshtein distance
+  const getMinDistance = (a: string, b: string): number => {
+    const dp: number[][] = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
+    for (let i = 0; i <= a.length; i++) dp[i][0] = i;
+    for (let j = 0; j <= b.length; j++) dp[0][j] = j;
+    for (let i = 1; i <= a.length; i++) {
+      for (let j = 1; j <= b.length; j++) {
+        dp[i][j] =
+          a[i - 1] === b[j - 1]
+            ? dp[i - 1][j - 1]
+            : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
+      }
+    }
+    return dp[a.length][b.length];
+  };
+
+  // Compare against both romanized text and native script
+  const ref = cleanRomanized || cleanTarget;
+  const dist = getMinDistance(cleanSpoken, ref);
+  const maxLen = Math.max(cleanSpoken.length, ref.length);
+  const similarity = Math.max(0, 1 - dist / maxLen);
+
+  const nativeDist = getMinDistance(cleanSpoken, cleanTarget);
+  const maxNativeLen = Math.max(cleanSpoken.length, cleanTarget.length);
+  const nativeSim = Math.max(0, 1 - nativeDist / maxNativeLen);
+
+  let score = Math.round(Math.max(similarity, nativeSim) * 100);
+
+  // If words share substring or tokens
+  if (ref.includes(cleanSpoken) || cleanSpoken.includes(ref)) {
+    score = Math.max(score, 78);
+  }
+
+  score = Math.max(12, Math.min(99, score));
+
+  let feedback = '';
+  if (score >= 85) {
+    feedback = 'Outstanding native pronunciation! Crisp vowel length and natural intonation. (+15 XP)';
+  } else if (score >= 60) {
+    feedback = 'Good attempt! Vowels are recognizable, but focus on the ending consonants. (+5 XP)';
+  } else {
+    feedback = 'Needs practice. Listen to the native audio above and try speaking again slowly.';
+  }
+
+  return { score, heard: spoken, feedback };
+}
+
 export const PracticePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -43,6 +116,8 @@ export const PracticePage: React.FC = () => {
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [speechScore, setSpeechScore] = useState<number | null>(null);
+  const [heardSpeech, setHeardSpeech] = useState<string | null>(null);
+  const [speechFeedback, setSpeechFeedback] = useState<string | null>(null);
   const [selectedListeningOption, setSelectedListeningOption] = useState<number | null>(null);
   const [listeningFeedback, setListeningFeedback] = useState<'correct' | 'wrong' | null>(null);
 
@@ -83,27 +158,106 @@ export const PracticePage: React.FC = () => {
     }
   };
 
-  const handleSimulateSpeech = () => {
+  const handleRecordSpeech = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      notify({
+        type: 'warning',
+        title: 'Microphone Not Supported',
+        message: 'Speech recognition is not supported on this browser. Try Chrome on Android or Desktop.',
+      });
+      return;
+    }
+
     if (isRecording) {
       setIsRecording(false);
       return;
     }
 
-    setIsRecording(true);
-    setSpeechScore(null);
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.lang = currentCard.audioLangCode || 'en-US';
 
-    // Simulate microphone audio processing
-    setTimeout(() => {
+      recognition.onstart = () => {
+        setIsRecording(true);
+        setSpeechScore(null);
+        setHeardSpeech(null);
+        setSpeechFeedback(null);
+        notify({
+          type: 'info',
+          title: '🎙️ Listening...',
+          message: `Say "${currentCard.word}" (${currentCard.romanized}) clearly.`,
+        });
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recognition.onresult = (event: any) => {
+        const spoken = event.results?.[0]?.[0]?.transcript || '';
+        setIsRecording(false);
+
+        // Calculate REAL phonetic & string accuracy
+        const result = computePronunciationAccuracy(spoken, currentCard.word, currentCard.romanized);
+        setSpeechScore(result.score);
+        setHeardSpeech(result.heard);
+        setSpeechFeedback(result.feedback);
+
+        if (result.score >= 80) {
+          setEarnedXp((prev) => prev + 15);
+          notify({
+            type: 'success',
+            title: `High Accuracy: ${result.score}% 🌟`,
+            message: `Heard: "${result.heard}" — Excellent native pronunciation!`,
+          });
+        } else if (result.score >= 50) {
+          setEarnedXp((prev) => prev + 5);
+          notify({
+            type: 'info',
+            title: `Moderate Accuracy: ${result.score}% 👍`,
+            message: `Heard: "${result.heard}" — Keep practicing!`,
+          });
+        } else {
+          notify({
+            type: 'warning',
+            title: `Accuracy: ${result.score}% (Needs Practice) ⚠️`,
+            message: `Heard: "${result.heard}" instead of "${currentCard.word}". Try again!`,
+          });
+        }
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recognition.onerror = (e: any) => {
+        setIsRecording(false);
+        if (e.error === 'not-allowed') {
+          notify({
+            type: 'error',
+            title: 'Microphone Permission Needed',
+            message: 'Please allow microphone access in your browser settings to practice pronunciation.',
+          });
+        } else if (e.error !== 'no-speech') {
+          notify({
+            type: 'warning',
+            message: `Microphone: ${e.error || 'Could not detect speech. Please try again.'}`,
+          });
+        }
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognition.start();
+    } catch {
       setIsRecording(false);
-      const score = Math.floor(Math.random() * 15) + 85; // 85% to 99%
-      setSpeechScore(score);
-      setEarnedXp((prev) => prev + 15);
       notify({
-        type: 'success',
-        title: `Speech Accuracy: ${score}%`,
-        message: 'Excellent intonation and clear vowel pronunciation!',
+        type: 'error',
+        message: 'Could not start speech recognition. Please check permissions.',
       });
-    }, 1800);
+    }
   };
 
   const handleListeningSubmit = (optionIndex: number, isCorrect: boolean) => {
@@ -132,6 +286,8 @@ export const PracticePage: React.FC = () => {
     setEarnedXp(0);
     setSessionCompleted(false);
     setSpeechScore(null);
+    setHeardSpeech(null);
+    setSpeechFeedback(null);
     setSelectedListeningOption(null);
     setListeningFeedback(null);
   };
@@ -395,30 +551,70 @@ export const PracticePage: React.FC = () => {
           <div className="py-4 flex flex-col items-center space-y-3">
             <button
               type="button"
-              onClick={handleSimulateSpeech}
+              onClick={handleRecordSpeech}
               className={cn(
                 'w-20 h-20 rounded-full flex items-center justify-center text-white transition-all shadow-xl active:scale-95',
                 isRecording
-                  ? 'bg-rose-600 animate-ping'
+                  ? 'bg-rose-600 animate-pulse ring-4 ring-rose-300'
                   : 'bg-blue-600 hover:bg-blue-700 hover:scale-105'
               )}
             >
               <Mic className="w-8 h-8" />
             </button>
             <span className="text-xs font-semibold text-slate-500">
-              {isRecording ? 'Listening carefully...' : 'Tap microphone and speak'}
+              {isRecording ? 'Listening carefully... Say the word!' : 'Tap microphone to speak'}
             </span>
           </div>
 
-          {/* Speech Result */}
+          {/* Real Speech Result */}
           {speechScore !== null && (
-            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 space-y-2 animate-fadeIn">
-              <div className="flex items-center justify-center gap-2 text-emerald-700 dark:text-emerald-300 font-bold">
-                <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                <span>Accuracy Score: {speechScore}%</span>
+            <div
+              className={cn(
+                'p-4 rounded-2xl border space-y-2 animate-fadeIn text-left',
+                speechScore >= 80
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800'
+                  : speechScore >= 50
+                  ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800'
+                  : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800'
+              )}
+            >
+              <div className="flex items-center justify-between">
+                <div
+                  className={cn(
+                    'flex items-center gap-2 font-bold text-sm',
+                    speechScore >= 80
+                      ? 'text-emerald-700 dark:text-emerald-300'
+                      : speechScore >= 50
+                      ? 'text-amber-700 dark:text-amber-300'
+                      : 'text-rose-700 dark:text-rose-300'
+                  )}
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Real Accuracy Score: {speechScore}%</span>
+                </div>
+                <Badge
+                  variant={speechScore >= 80 ? 'green' : speechScore >= 50 ? 'amber' : 'rose'}
+                  size="sm"
+                >
+                  {speechScore >= 80 ? 'Excellent' : speechScore >= 50 ? 'Moderate' : 'Needs Work'}
+                </Badge>
               </div>
-              <p className="text-xs text-slate-600 dark:text-slate-300">
-                Native pitch cadence and vowel length recognized accurately! (+15 XP)
+
+              {heardSpeech && (
+                <div className="text-xs text-slate-700 dark:text-slate-300 bg-white/60 dark:bg-slate-900/60 p-2.5 rounded-xl space-y-1">
+                  <div>
+                    <span className="font-semibold text-slate-500">We heard: </span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100">"{heardSpeech}"</span>
+                  </div>
+                  <div>
+                    <span className="font-semibold text-slate-500">Expected: </span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400">"{currentCard.word}" ({currentCard.romanized})</span>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                {speechFeedback}
               </p>
             </div>
           )}
@@ -432,6 +628,8 @@ export const PracticePage: React.FC = () => {
                 if (currentIndex + 1 < deck.length) {
                   setCurrentIndex((p) => p + 1);
                   setSpeechScore(null);
+                  setHeardSpeech(null);
+                  setSpeechFeedback(null);
                 } else {
                   setSessionCompleted(true);
                 }

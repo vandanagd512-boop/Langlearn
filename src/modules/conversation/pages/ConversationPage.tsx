@@ -287,8 +287,84 @@ export const ConversationPage: React.FC = () => {
     }
 
     if (!replyNative) {
-      // A. Greeting inquiries
-      if (/^(hi|hello|namaskara|namaste|vanakkam|namaskaram|hey)/i.test(lower)) {
+      // A. "How are you" and all conversational variants ("how r u", "hwr u", "how are u doing", etc.)
+      if (
+        /\b(how\s*r\s*u|hwr\s*u|hw\s*r\s*u|how\s*are\s*you|how\s*are\s*u|how\s*r\s*you|how\s*are\s*u\s*doing|how\s*are\s*you\s*doing|how\s*do\s*you\s*do|hegiddiri|hegidira|kaise\s*ho|kaise\s*hain|ela\s*unnaru|eppadi\s*irukkireergal|eppadi\s*irukkinga)\b/i.test(
+          lower
+        )
+      ) {
+        if (activeLanguageCode === 'kn') {
+          replyNative = `ನಾನು ತುಂಬಾ ಚೆನ್ನಾಗಿದ್ದೇನೆ, ಧನ್ಯವಾದಗಳು! ನೀವು ಹೇಗಿದ್ದೀರಿ? ಇಂದು ನಾವು ಏನು ಅಭ್ಯಾಸ ಮಾಡೋಣ?`;
+          replyRomanized = `Naanu tumba chennagiddene, dhanyavadagalu! Neevu hegiddiri? Indu naavu enu abhyāsa mādona?`;
+          replyEnglish = `I am doing very well, thank you! How are you doing today? What shall we practice?`;
+        } else if (activeLanguageCode === 'te') {
+          replyNative = `నేను చాలా బాగున్నాను, ధನ್ಯవాదాలు! మీరు ఎలా ఉన్నారు? ఈ రోజు మనం ఏమి ప్రాక్టీస్ చేద్దాం?`;
+          replyRomanized = `Nenu chala bagunnanu, dhanyavadalu! Meeru ela unnaru? Ee roju manam emi practice cheddam?`;
+          replyEnglish = `I am doing very well, thank you! How are you doing? What shall we practice today?`;
+        } else if (activeLanguageCode === 'ta') {
+          replyNative = `நான் நலமாக உள்ளேன், நன்றி! நீங்கள் எப்படி இருக்கிறீர்கள்? இன்று நாம் என்ன கற்கலாம்?`;
+          replyRomanized = `Naan nalamaaga ullen, nandri! Neengal eppadi irukkireergal? Indru naam enna karkalaam?`;
+          replyEnglish = `I am very well, thank you! How are you doing? What shall we learn today?`;
+        } else if (activeLanguageCode === 'en') {
+          replyNative = `I am doing great, thank you! How are you doing today? What would you like to practice?`;
+          replyRomanized = `I am doing great, thank you! How are you doing today?`;
+          replyEnglish = `I am doing great, thank you! How are you doing today? What would you like to practice?`;
+        } else {
+          replyNative = `मैं बिल्कुल ठीक हूँ, धन्यवाद! आप कैसे हैं? आज क्या नया अभ्यास करेंगे?`;
+          replyRomanized = `Main bilkul theek hoon, dhanyavaad! Aap kaise hain?`;
+          replyEnglish = `I am doing very well, thank you! How are you? What shall we practice today?`;
+        }
+      }
+      // B. Student says "I am fine" / "I am good" / "im good" / "doing well"
+      else if (
+        /\b(i\s*am\s*good|im\s*good|i'm\s*good|i\s*am\s*fine|im\s*fine|i'm\s*fine|doing\s*good|doing\s*well|all\s*good|naanu\s*chennagiddene|main\s*theek\s*hoon|nenu\s*bagunnanu)\b/i.test(
+          lower
+        )
+      ) {
+        if (activeLanguageCode === 'kn') {
+          replyNative = `ಕೇಳಿ ತುಂಬಾ ಸಂತೋಷವಾಯಿತು! ಇಂದು ನಾವು ಹೊಸ ಸಂಭಾಷಣೆ ಅಥವಾ ಶಬ್ದಕೋಶ ಕಲಿಯೋಣವೇ?`;
+          replyRomanized = `Kēli tumba santhōshavāyithu! Indu naavu hosa sambhāshane athavā shabdakōsha kaliyōnavē?`;
+          replyEnglish = `Wonderful to hear that! Shall we practice some everyday conversations or vocabulary today?`;
+        } else if (activeLanguageCode === 'te') {
+          replyNative = `వినడానికి చాలా సంతోషంగా ఉంది! ఈ రోజు మనం నిత్య జీవిత సంభాషణలు లేదా పదజాలం ప్రాక్టీస్ చేద్దామా?`;
+          replyRomanized = `Vinadaniki chala santhoshanga undi! Ee roju manam nitya jeevitha sambhashanalu practice cheddama?`;
+          replyEnglish = `So glad to hear that! Shall we practice real-life conversations or vocabulary today?`;
+        } else if (activeLanguageCode === 'en') {
+          replyNative = `That is fantastic to hear! I'm glad you are doing well. Shall we practice speaking some daily conversation dialogues or vocabulary?`;
+          replyRomanized = `That is fantastic to hear!`;
+          replyEnglish = `That is fantastic to hear! I'm glad you are doing well. Shall we practice speaking some daily conversation dialogues or vocabulary?`;
+        } else {
+          replyNative = `यह जानकर बहुत खुशी हुई! क्या आज हम बातचीत या नए शब्दों का अभ्यास करें?`;
+          replyRomanized = `Yeh jaankar bahut khushi hui!`;
+          replyEnglish = `So glad to hear that! Shall we practice real-life conversations or vocabulary today?`;
+        }
+      }
+      // C. "What are you doing" / "what r u doing"
+      else if (
+        /\b(what\s*are\s*you\s*doing|what\s*r\s*u\s*doing|wt\s*r\s*u\s*doing|what\s*are\s*u\s*doing|wt\s*u\s*doing|enu\s*maduttiddiri|kya\s*kar\s*rahe\s*ho|emi\s*chestunnaru)\b/i.test(
+          lower
+        )
+      ) {
+        if (activeLanguageCode === 'kn') {
+          replyNative = `ನಾನು ನಿಮಗಾಗಿ ಭಾಷಾ ಪಾಠವನ್ನು ಸಿದ್ಧಪಡಿಸುತ್ತಿದ್ದೇನೆ ಮತ್ತು ನಿಮ್ಮೊಂದಿಗೆ ಮಾತನಾಡಲು ಉತ್ಸುಕನಾಗಿದ್ದೇನೆ! ನೀವು ಏನು ಮಾಡುತ್ತಿದ್ದೀರಿ?`;
+          replyRomanized = `Naanu nimagāgi bhāshā pāthavannu siddhapadisuttiddēne! Neevu ēnu māduttiddīri?`;
+          replyEnglish = `I am preparing your language lesson and excited to chat with you! What are you doing right now?`;
+        } else if (activeLanguageCode === 'te') {
+          replyNative = `నేను మీ కోసం కొత్త పాఠాన్ని సిద్ధం చేస్తున్నాను మరియు మీతో మాట్లాడటానికి సంతోషిస్తున్నాను! మీరు ఇప్పుడు ఏమి చేస్తున్నారు?`;
+          replyRomanized = `Nenu mee kosam kotha paathanni siddham chestunnanu! Meeru ippudu emi chestunnaru?`;
+          replyEnglish = `I am preparing a new lesson for you and excited to speak with you! What are you doing right now?`;
+        } else if (activeLanguageCode === 'en') {
+          replyNative = `I am preparing your personalized language lesson and excited to chat with you! What are you doing right now?`;
+          replyRomanized = `I am preparing your personalized language lesson!`;
+          replyEnglish = `I am preparing your personalized language lesson and excited to chat with you! What are you doing right now?`;
+        } else {
+          replyNative = `मैं आपके लिए नया पाठ तैयार कर रहा हूँ और आपसे बात करके खुश हूँ! आप अभी क्या कर रहे हैं?`;
+          replyRomanized = `Main aapke liye naya paath taiyaar kar raha hoon!`;
+          replyEnglish = `I am preparing a new lesson for you and glad to chat! What are you doing right now?`;
+        }
+      }
+      // D. Greetings inquiries (Hello / Hi / Good morning)
+      else if (/^(hi|hello|hey|namaskara|namaste|vanakkam|namaskaram|good\s*morning|good\s*evening|good\s*afternoon)/i.test(lower)) {
         if (activeLanguageCode === 'kn') {
           replyNative = `ನಮಸ್ಕಾರ! ನಿಮ್ಮ ಧ್ವನಿ ಕೇಳಿ ತುಂಬಾ ಸಂತೋಷವಾಯಿತು. ಇಂದು ನೀವು ಯಾವ ವಿಷಯದ ಬಗ್ಗೆ ಕಲಿಯಲು ಬಯಸುತ್ತೀರಿ?`;
           replyRomanized = `Namaskara! Nimma dhvani keli tumba santhoshavayithu. Indu neevu yaava vishayada bagge kaliyalu bayasuttiri?`;
@@ -311,32 +387,8 @@ export const ConversationPage: React.FC = () => {
           replyEnglish = `Hello! Great to hear from you. What should we practice today?`;
         }
       }
-      // B. "How are you"
-      else if (lower.includes('how are you') || lower.includes('hegiddiri') || lower.includes('kaise ho') || lower.includes('ela unnaru')) {
-        if (activeLanguageCode === 'kn') {
-          replyNative = `ನಾನು ತುಂಬಾ ಚೆನ್ನಾಗಿದ್ದೇನೆ, ಧನ್ಯವಾದಗಳು! ನೀವು ಹೇಗಿದ್ದೀರಿ? ನಿಮ್ಮ ಭಾಷಾ ಕಲಿಕೆ ಹೇಗೆ ಸಾಗುತ್ತಿದೆ?`;
-          replyRomanized = `Naanu tumba chennagiddene, dhanyavadagalu! Neevu hegiddiri? Nimma bhasha kalike hege saaguttide?`;
-          replyEnglish = `I am doing very well, thank you! How are you? How is your language learning going?`;
-        } else if (activeLanguageCode === 'te') {
-          replyNative = `నేను చాలా బాగున్నాను, ధన్యవాదాలు! మీరు ఎలా ఉన్నారు? మీ భాషా సాధన ఎలా సాగుతోంది?`;
-          replyRomanized = `Nenu chala bagunnanu, dhanyavadalu! Meeru ela unnaru?`;
-          replyEnglish = `I am doing very well, thank you! How are you? How is your language practice going?`;
-        } else if (activeLanguageCode === 'ta') {
-          replyNative = `நான் நலமாக உள்ளேன், நன்றி! நீங்கள் எப்படி இருக்கிறீர்கள்?`;
-          replyRomanized = `Naan nalamaaga ullen, nandri! Neengal eppadi irukkireergal?`;
-          replyEnglish = `I am very well, thank you! How are you doing?`;
-        } else if (activeLanguageCode === 'en') {
-          replyNative = `I am doing fantastic, thank you! How are you? How is your learning going today?`;
-          replyRomanized = `I am doing fantastic, thank you!`;
-          replyEnglish = `I am doing fantastic, thank you! How are you? How is your learning going today?`;
-        } else {
-          replyNative = `मैं बिल्कुल ठीक हूँ, धन्यवाद! आप कैसे हैं? आज क्या नया सीखेंगे?`;
-          replyRomanized = `Main bilkul theek hoon, dhanyavaad! Aap kaise hain?`;
-          replyEnglish = `I am very well, thank you! How are you? What new thing shall we learn today?`;
-        }
-      }
-      // C. "What is your name" / "who are you"
-      else if (lower.includes('your name') || lower.includes('hesarenu') || lower.includes('who are you') || lower.includes('mee peru')) {
+      // E. "What is your name" / "who are you"
+      else if (/\b(your\s*name|who\s*are\s*you|who\s*r\s*u|tell\s*me\s*about\s*yourself|hesarenu|nimma\s*hesaru|mee\s*peru|aapka\s*naam)\b/i.test(lower)) {
         if (activeLanguageCode === 'kn') {
           replyNative = `ನನ್ನ ಹೆಸರು ${activeTeacher.name}. ನಾನು ನಿಮ್ಮ ವೈಯಕ್ತಿಕ ${langObj.name} ಶಿಕ್ಷಕಿ! ನೀವು ಯಾವುದೇ ಪ್ರಶ್ನೆ ಕೇಳಬಹುದು.`;
           replyRomanized = `Nanna hesaru ${activeTeacher.name}. Naanu nimma ${langObj.name} shikshaki!`;
@@ -359,7 +411,27 @@ export const ConversationPage: React.FC = () => {
           replyEnglish = `My name is ${activeTeacher.name}. I am your language teacher!`;
         }
       }
-      // D. "How to say [something]" or "What is [something] in [language]"
+      // F. "Thank you" / "Thanks"
+      else if (/\b(thank\s*you|thanks|thx|tq|dhanyavadagalu|dhanyavadalu|shukriya|nandri)\b/i.test(lower)) {
+        if (activeLanguageCode === 'kn') {
+          replyNative = `ಸ್ವಾಗತ! ನೀವು ಪ್ರತಿದಿನ ಅದ್ಭುತವಾಗಿ ಪ್ರಗತಿ ಸಾಧಿಸುತ್ತಿದ್ದೀರಿ. ಹೀಗೆಯೇ ಮುಂದುವರಿಸಿ!`;
+          replyRomanized = `Swāgatha! Neevu pratidina adbhutavāgi pragathi sādhisuttiddīri.`;
+          replyEnglish = `You are very welcome! You are making great progress every single day.`;
+        } else if (activeLanguageCode === 'te') {
+          replyNative = `స్వాగతం! మీరు ప్రతి రోజూ అద్భుతంగా నేర్చుకుంటున్నారు. ఇలాగే కొనసాగించండి!`;
+          replyRomanized = `Swāgatham! Meeru prati rōjū adbhutanga nērchukuntunnaru.`;
+          replyEnglish = `You are very welcome! You are learning wonderfully every day.`;
+        } else if (activeLanguageCode === 'en') {
+          replyNative = `You are very welcome! You are doing fantastic and improving with every practice.`;
+          replyRomanized = `You are very welcome!`;
+          replyEnglish = `You are very welcome! You are doing fantastic and improving with every practice.`;
+        } else {
+          replyNative = `आपका स्वागत है! आप बहुत अच्छा प्रयास कर रहे हैं और लगातार सीख रहे हैं।`;
+          replyRomanized = `Aapka swaagat hai!`;
+          replyEnglish = `You are very welcome! You are making tremendous progress.`;
+        }
+      }
+      // G. "How to say [something]" or "What is [something] in [language]"
       else if (
         lower.includes('how to say') ||
         lower.includes('how do i say') ||
@@ -413,7 +485,7 @@ export const ConversationPage: React.FC = () => {
           replyEnglish = `Great question! Practice this regularly.`;
         }
       }
-      // E. Student practicing a phrase in Kannada, Hindi, Telugu, Tamil or native script
+      // H. Student practicing a phrase in Kannada, Hindi, Telugu, Tamil or native script
       else if (/[\u0C80-\u0CFF\u0900-\u097F\u0B80-\u0BFF\u0C00-\u0C7F]/.test(clean)) {
         try {
           const transBack = await translationService.translate({
@@ -421,7 +493,7 @@ export const ConversationPage: React.FC = () => {
             sourceLanguage: activeLanguageCode,
             targetLanguage: 'en',
           });
-          replyNative = `అద్భుతం / ಅದ್ಭುತ! "${clean}" (${transBack.translatedText}). మీ ఉచ్చారణ చాలా బాగుంది! 🌟`;
+          replyNative = `ಅದ್ಭುತ! ನೀವು "${clean}" (${transBack.translatedText}) ಎಂದು ಬಹಳ ಸ್ಪಷ್ಟವಾಗಿ ಹೇಳಿದಿರಿ. ನಿಮ್ಮ ಉಚ್ಚಾರಣೆ ಅತ್ಯುತ್ತಮವಾಗಿದೆ! 🌟`;
           replyRomanized = `Pronunciation accuracy: 98%`;
           replyEnglish = `Terrific! You said "${clean}" which means "${transBack.translatedText}". Exceptional clarity!`;
         } catch {
@@ -430,7 +502,7 @@ export const ConversationPage: React.FC = () => {
           replyEnglish = `Terrific! You said "${clean}" with exceptional clarity!`;
         }
       }
-      // F. General Student query / sentence: Dynamically Translate to Target Language!
+      // I. General Conversational Teacher Response: Never echo broken shorthand
       else {
         try {
           const transResult = await translationService.translate({
@@ -439,26 +511,26 @@ export const ConversationPage: React.FC = () => {
             targetLanguage: activeLanguageCode,
           });
 
-          if (activeLanguageCode === 'te') {
-            replyNative = `చాలా మంచి ఆలోచన! దీనిని తెలుగులో ఇలా వ్యక్తపరచవచ్చు: "${transResult.translatedText}".`;
-            replyRomanized = `Chala manchi aalochana! Deenini Telugulo ila vyaktaparachavachu: "${transResult.translatedText}".`;
-            replyEnglish = `Great thought! In Telugu, you can say: "${transResult.translatedText}".`;
+          if (activeLanguageCode === 'en') {
+            replyNative = `That's a very interesting thought! You expressed that nicely: "${clean}". Let's practice saying it together in a full, confident tone!`;
+            replyRomanized = `That's a very interesting thought!`;
+            replyEnglish = `That's a very interesting thought! You expressed that nicely: "${clean}". Let's practice saying it together in a full, confident tone!`;
+          } else if (activeLanguageCode === 'te') {
+            replyNative = `చాలా మంచి విషయం! దీనిని తెలుగులో మనం: "${transResult.translatedText}" అంటాము. నాతో పాటు ఒకసారి పలకండి!`;
+            replyRomanized = `Chala manchi vishayam! Deenini Telugulo manam "${transResult.translatedText}" antamu.`;
+            replyEnglish = `Great thought! In Telugu, we express that as: "${transResult.translatedText}". Try saying it with me!`;
           } else if (activeLanguageCode === 'kn') {
-            replyNative = `ಉತ್ತಮ ಪ್ರಶ್ನೆ! ಇದನ್ನು ಕನ್ನಡದಲ್ಲಿ ಹೀಗೆ ವ್ಯಕ್ತಪಡಿಸಬಹುದು: "${transResult.translatedText}".`;
-            replyRomanized = `Uttama prashne! Idhannu Kannadadalli heege vyaktapadisabahudu: "${transResult.translatedText}".`;
-            replyEnglish = `Good thought! In Kannada, you can express this as: "${transResult.translatedText}".`;
+            replyNative = `ಉತ್ತಮ ಮಾತು! ಇದನ್ನು ಕನ್ನಡದಲ್ಲಿ ನಾವು: "${transResult.translatedText}" ಎಂದು ಹೇಳುತ್ತೇವೆ. ನನ್ನ ನಂತರ ಒಮ್ಮೆ ಪುನರಾವರ್ತಿಸಿ!`;
+            replyRomanized = `Uttama mātu! Idhannu Kannadadalli naavu "${transResult.translatedText}" endu heluththeve.`;
+            replyEnglish = `Good thought! In Kannada, we express this as: "${transResult.translatedText}". Try repeating after me!`;
           } else if (activeLanguageCode === 'ta') {
-            replyNative = `சிறந்த கேள்வி! இதை தமிழில் இப்படி சொல்லலாம்: "${transResult.translatedText}".`;
-            replyRomanized = `Sirandha kelvi! Idhai Thamizhil ippadi sollalaam: "${transResult.translatedText}".`;
-            replyEnglish = `Great question! In Tamil, you can say: "${transResult.translatedText}".`;
-          } else if (activeLanguageCode === 'en') {
-            replyNative = `Great thought! In English, you can say: "${transResult.translatedText}". Let's practice saying it together!`;
-            replyRomanized = `Great thought!`;
-            replyEnglish = `Great thought! In English, you can say: "${transResult.translatedText}".`;
+            replyNative = `சிறந்த கருத்து! இதை தமிழில் நாம்: "${transResult.translatedText}" என்று சொல்வோம். என்னுடன் சொல்லுங்கள்!`;
+            replyRomanized = `Sirandha karuthu! Idhai Thamizhil naam "${transResult.translatedText}" endru solvom.`;
+            replyEnglish = `Great idea! In Tamil, we say: "${transResult.translatedText}". Repeat after me!`;
           } else {
-            replyNative = `बहुत अच्छा विचार! इसे ${langObj.name} में ऐसे कह सकते हैं: "${transResult.translatedText}"।`;
+            replyNative = `बहुत अच्छा विचार! इसे ${langObj.name} में हम कहते हैं: "${transResult.translatedText}"। मेरे साथ बोलकर अभ्यास करें!`;
             replyRomanized = `Bahut achha vichaar!`;
-            replyEnglish = `Good thought! In ${langObj.name}, you can express this as: "${transResult.translatedText}".`;
+            replyEnglish = `Good thought! In ${langObj.name}, we say: "${transResult.translatedText}". Practice saying it with me!`;
           }
         } catch {
           replyNative = `ಬಹಳ ಚೆನ್ನಾಗಿದೆ! ನಿಮ್ಮ ಭಾಷಾ ಅಭ್ಯಾಸವನ್ನು ಹೀಗೆಯೇ ಮುಂದುವರಿಸಿ.`;

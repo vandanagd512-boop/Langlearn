@@ -13,9 +13,9 @@ export class SpeechService {
   }
 
   /**
-   * Speaks the given text in the requested target language.
+   * Speaks the given text in the requested target language with configurable speed rate.
    */
-  public static speak(text: string, langCode: string = 'en-US'): Promise<void> {
+  public static speak(text: string, langCode: string = 'en-US', rate: number = 1.0): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.isSpeechSynthesisSupported()) {
         logger.warn('SpeechService', 'Speech synthesis is not supported on this browser');
@@ -26,7 +26,8 @@ export class SpeechService {
       window.speechSynthesis.cancel(); // Stop prior speech
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = langCode;
-      utterance.rate = 0.95; // Slightly slower for clarity
+      // Clamp rate between 0.5x (slow) and 2.0x (fast)
+      utterance.rate = Math.max(0.5, Math.min(2.0, rate));
       utterance.pitch = 1.0;
 
       utterance.onend = () => resolve();

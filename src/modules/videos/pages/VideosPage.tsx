@@ -141,7 +141,7 @@ export const VideosPage: React.FC = () => {
           // Watchdog timer: if browser voice hangs or fails, keep video rolling smoothly
           const watchdog = setTimeout(complete, estimatedDurationMs + 1200);
 
-          SpeechService.speak(currentSentence.text, speechCode)
+          SpeechService.speak(currentSentence.text, speechCode, playbackRate)
             .then(() => {
               clearTimeout(watchdog);
               complete();
