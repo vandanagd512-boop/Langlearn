@@ -18,6 +18,7 @@ import { CourseSectionCard } from '../components/CourseSectionCard';
 import { LearningPathRoadmap } from '../components/LearningPathRoadmap';
 import { CourseFiltersBar } from '../components/CourseFiltersBar';
 import { CoursesSkeleton } from '../components/CoursesSkeleton';
+import { CertificateModal } from '@/components/certificate/CertificateModal';
 
 import { SearchX, ArrowLeft, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -39,6 +40,7 @@ export const CoursesPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<SectionFilter>('all');
   const [viewTab, setViewTab] = useState<ViewTab>('sections');
   const [bookmarkedCourses, setBookmarkedCourses] = useState<string[]>([]);
+  const [showCertificate, setShowCertificate] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load bookmarks & simulate initial load
@@ -265,6 +267,7 @@ export const CoursesPage: React.FC = () => {
         totalLessons={courseData.totalLessons}
         completedQuizzes={courseData.completedQuizzes}
         totalQuizzes={courseData.totalQuizzes}
+        onViewCertificate={() => setShowCertificate(true)}
       />
 
       {/* Filter and View Switcher */}
@@ -323,6 +326,15 @@ export const CoursesPage: React.FC = () => {
           ))}
         </div>
       )}
+
+      {/* Official Course Certificate Modal */}
+      <CertificateModal
+        isOpen={showCertificate}
+        onClose={() => setShowCertificate(false)}
+        userName="Dedicated Language Scholar"
+        languageName={courseData.languageName}
+        courseTitle={`${courseData.languageName} Comprehensive Mastery & Real-Life Situations`}
+      />
     </div>
   );
 };

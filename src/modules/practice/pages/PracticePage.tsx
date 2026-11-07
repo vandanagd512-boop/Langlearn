@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { SpeechService } from '@/services/speech/speech.service';
+import { PronunciationService } from '@/services/speech/pronunciation.service';
 import { StorageService } from '@/utils/storage';
 import { getVocabularyForLanguage } from '@/modules/vocabulary/data/vocabulary.data';
 import { SUPPORTED_LANGUAGES } from '@/config/constants';
@@ -29,79 +30,6 @@ import {
 import { cn } from '@/utils/cn';
 
 type PracticeMode = 'flashcards' | 'speech' | 'listening';
-
-function computePronunciationAccuracy(
-  spoken: string,
-  targetWord: string,
-  romanized: string
-): { score: number; heard: string; feedback: string } {
-  const cleanSpoken = spoken.trim().toLowerCase();
-  const cleanTarget = targetWord.trim().toLowerCase();
-  const cleanRomanized = (romanized || '').trim().toLowerCase();
-
-  if (!cleanSpoken) {
-    return {
-      score: 0,
-      heard: 'No voice detected',
-      feedback: 'Could not catch your voice. Please speak closer to the microphone.',
-    };
-  }
-
-  // Exact native or romanized match
-  if (cleanSpoken === cleanTarget || (cleanRomanized && cleanSpoken === cleanRomanized)) {
-    return {
-      score: 98,
-      heard: spoken,
-      feedback: 'Outstanding native pronunciation! Crisp vowel length and natural intonation. (+15 XP)',
-    };
-  }
-
-  // Levenshtein distance
-  const getMinDistance = (a: string, b: string): number => {
-    const dp: number[][] = Array.from({ length: a.length + 1 }, () => Array(b.length + 1).fill(0));
-    for (let i = 0; i <= a.length; i++) dp[i][0] = i;
-    for (let j = 0; j <= b.length; j++) dp[0][j] = j;
-    for (let i = 1; i <= a.length; i++) {
-      for (let j = 1; j <= b.length; j++) {
-        dp[i][j] =
-          a[i - 1] === b[j - 1]
-            ? dp[i - 1][j - 1]
-            : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
-      }
-    }
-    return dp[a.length][b.length];
-  };
-
-  // Compare against both romanized text and native script
-  const ref = cleanRomanized || cleanTarget;
-  const dist = getMinDistance(cleanSpoken, ref);
-  const maxLen = Math.max(cleanSpoken.length, ref.length);
-  const similarity = Math.max(0, 1 - dist / maxLen);
-
-  const nativeDist = getMinDistance(cleanSpoken, cleanTarget);
-  const maxNativeLen = Math.max(cleanSpoken.length, cleanTarget.length);
-  const nativeSim = Math.max(0, 1 - nativeDist / maxNativeLen);
-
-  let score = Math.round(Math.max(similarity, nativeSim) * 100);
-
-  // If words share substring or tokens
-  if (ref.includes(cleanSpoken) || cleanSpoken.includes(ref)) {
-    score = Math.max(score, 78);
-  }
-
-  score = Math.max(12, Math.min(99, score));
-
-  let feedback = '';
-  if (score >= 85) {
-    feedback = 'Outstanding native pronunciation! Crisp vowel length and natural intonation. (+15 XP)';
-  } else if (score >= 60) {
-    feedback = 'Good attempt! Vowels are recognizable, but focus on the ending consonants. (+5 XP)';
-  } else {
-    feedback = 'Needs practice. Listen to the native audio above and try speaking again slowly.';
-  }
-
-  return { score, heard: spoken, feedback };
-}
 
 export const PracticePage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -234,7 +162,7 @@ export const PracticePage: React.FC = () => {
         setIsRecording(false);
 
         // Calculate REAL phonetic & string accuracy
-        const result = computePronunciationAccuracy(spoken, currentCard.word, currentCard.romanized);
+        const result = PronunciationService.computeAccuracy(spoken, currentCard.word, currentCard.romanized);
         setSpeechScore(result.score);
         setHeardSpeech(result.heard);
         setSpeechFeedback(result.feedback);

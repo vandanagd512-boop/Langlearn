@@ -9,6 +9,7 @@ interface CourseProgressCardProps {
   totalLessons: number;
   completedQuizzes: number;
   totalQuizzes: number;
+  onViewCertificate?: () => void;
 }
 
 export const CourseProgressCard: React.FC<CourseProgressCardProps> = ({
@@ -16,6 +17,7 @@ export const CourseProgressCard: React.FC<CourseProgressCardProps> = ({
   totalLessons,
   completedQuizzes,
   totalQuizzes,
+  onViewCertificate,
 }) => {
   const { dailyGoalMinutes } = useAppStore();
 
@@ -115,7 +117,7 @@ export const CourseProgressCard: React.FC<CourseProgressCardProps> = ({
       </div>
 
       {/* Certificate Teaser Banner */}
-      <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-200/50 dark:border-blue-900/40">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-200/50 dark:border-blue-900/40">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
             <Award className="w-4 h-4" />
@@ -123,14 +125,25 @@ export const CourseProgressCard: React.FC<CourseProgressCardProps> = ({
           <div className="space-y-0.5">
             <div className="text-xs font-bold text-slate-900 dark:text-slate-100">
               {progressPercent === 100
-                ? 'Certificate of Completion Available!'
+                ? 'Certificate of Completion Available! 🏅'
                 : 'Accredited Certificate on Completion'}
             </div>
             <div className="text-[11px] text-slate-500 dark:text-slate-400">
-              Complete all 11 sections and final quiz to unlock your signed badge.
+              Complete all sections and evaluation quizzes to unlock your verified credential.
             </div>
           </div>
         </div>
+
+        {onViewCertificate && (
+          <button
+            type="button"
+            onClick={onViewCertificate}
+            className="shrink-0 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold shadow-sm transition active:scale-95 flex items-center gap-1.5"
+          >
+            <Award className="w-3.5 h-3.5" />
+            <span>View Certificate</span>
+          </button>
+        )}
       </div>
     </Card>
   );

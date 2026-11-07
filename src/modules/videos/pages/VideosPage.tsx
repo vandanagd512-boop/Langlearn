@@ -21,11 +21,13 @@ import {
   RotateCcw,
   SkipBack,
   SkipForward,
+  Mic,
 } from 'lucide-react';
 import { ALL_VIDEO_LESSONS, REAL_LIFE_CATEGORIES } from '../data/videos.data';
 import { VideoLesson, VideoDurationCategory, VideoProficiencyLevel } from '../types/video.types';
 import { AnimatedCharacterAvatar } from '../components/AnimatedCharacterAvatar';
 import { SpeechService } from '@/services/speech/speech.service';
+import { PronunciationService, PronunciationScoreResult } from '@/services/speech/pronunciation.service';
 import { useNotification } from '@/context/NotificationContext';
 import { useAppStore } from '@/state/store';
 import { SUPPORTED_LANGUAGES } from '@/config/constants';
@@ -43,6 +45,8 @@ export const VideosPage: React.FC = () => {
   const [playbackRate, setPlaybackRate] = useState<number>(1.0);
   const [activeSentenceIndex, setActiveSentenceIndex] = useState<number>(0);
   const [completedVideos, setCompletedVideos] = useState<string[]>(['vid-kn-beginner-1']);
+  const [isPracticingTurn, setIsPracticingTurn] = useState<boolean>(false);
+  const [turnScoreResult, setTurnScoreResult] = useState<PronunciationScoreResult | null>(null);
 
   // Lessons list filtered by active language
   const languageLessons = useMemo(() => {
@@ -269,6 +273,77 @@ export const VideosPage: React.FC = () => {
     SpeechService.stop();
     setActiveSentenceIndex(0);
     setIsPlaying(true);
+    setTurnScoreResult(null);
+  };
+
+  const handlePracticeCurrentSentence = () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      notify({
+        type: 'warning',
+        title: 'Microphone Required',
+        message: 'Speech recognition is not supported on this browser. Try Google Chrome on Android or Desktop.',
+      });
+      return;
+    }
+
+    SpeechService.stop();
+    setIsPlaying(false);
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.lang = `${activeLesson.languageCode}-IN`;
+
+      recognition.onstart = () => {
+        setIsPracticingTurn(true);
+        setTurnScoreResult(null);
+        notify({
+          type: 'info',
+          title: '🎙️ Listening...',
+          message: `Repeat: "${currentSentence?.text}" now!`,
+        });
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recognition.onresult = (event: any) => {
+        const spoken = event.results?.[0]?.[0]?.transcript || '';
+        setIsPracticingTurn(false);
+        if (spoken && currentSentence) {
+          const result = PronunciationService.computeAccuracy(spoken, currentSentence.text);
+          setTurnScoreResult(result);
+          if (result.score >= 80) {
+            notify({
+              type: 'success',
+              title: `Outstanding Accuracy: ${result.score}% 🌟`,
+              message: `You said: "${result.heard}" (+15 XP)`,
+            });
+          } else {
+            notify({
+              type: 'warning',
+              title: `Accuracy: ${result.score}% 👍`,
+              message: `We heard: "${result.heard}". Try once more!`,
+            });
+          }
+        }
+      };
+
+      recognition.onerror = () => {
+        setIsPracticingTurn(false);
+      };
+
+      recognition.onend = () => {
+        setIsPracticingTurn(false);
+      };
+
+      recognition.start();
+    } catch {
+      setIsPracticingTurn(false);
+    }
   };
 
   const handlePronounceWord = (term: string, langCode: string) => {
@@ -510,6 +585,32 @@ export const VideosPage: React.FC = () => {
                   <p className="text-xs text-white/80 italic">
                     "{currentSentence?.translation}"
                   </p>
+
+                  {/* Real Pronunciation Practice inside Video */}
+                  <div className="pt-1.5 border-t border-white/10 flex items-center justify-between text-xs">
+                    <button
+                      type="button"
+                      onClick={handlePracticeCurrentSentence}
+                      className={`px-2.5 py-1 rounded-xl text-[10px] font-bold transition flex items-center gap-1.5 shadow-sm ${
+                        isPracticingTurn
+                          ? 'bg-rose-500 text-white animate-pulse'
+                          : 'bg-white/15 hover:bg-white/25 text-white active:scale-95'
+                      }`}
+                    >
+                      <Mic className="w-3 h-3 text-amber-300" />
+                      <span>{isPracticingTurn ? 'Listening to you...' : 'Practice Speaking Line'}</span>
+                    </button>
+
+                    {turnScoreResult ? (
+                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40">
+                        Accuracy: {turnScoreResult.score}% ⭐
+                      </span>
+                    ) : (
+                      <span className="text-[9px] text-white/60 font-mono">
+                        Tap mic to test voice
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
