@@ -31,6 +31,7 @@ import { PronunciationService, PronunciationScoreResult } from '@/services/speec
 import { CertificateModal } from '@/components/certificate/CertificateModal';
 import { useNotification } from '@/context/NotificationContext';
 import { useAppStore } from '@/state/store';
+import { StorageService } from '@/utils/storage';
 import { SUPPORTED_LANGUAGES } from '@/config/constants';
 
 export const VideosPage: React.FC = () => {
@@ -45,7 +46,9 @@ export const VideosPage: React.FC = () => {
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [playbackRate, setPlaybackRate] = useState<number>(1.0);
   const [activeSentenceIndex, setActiveSentenceIndex] = useState<number>(0);
-  const [completedVideos, setCompletedVideos] = useState<string[]>(['vid-kn-beginner-1']);
+  const [completedVideos, setCompletedVideos] = useState<string[]>(() =>
+    StorageService.getItem<string[]>('completed_video_lessons', [])
+  );
   const [isPracticingTurn, setIsPracticingTurn] = useState<boolean>(false);
   const [turnScoreResult, setTurnScoreResult] = useState<PronunciationScoreResult | null>(null);
   const [showCertificateModal, setShowCertificateModal] = useState<boolean>(false);
@@ -55,6 +58,18 @@ export const VideosPage: React.FC = () => {
     const list = ALL_VIDEO_LESSONS.filter((v) => v.languageCode === activeLanguageCode);
     return list.length > 0 ? list : ALL_VIDEO_LESSONS.filter((v) => v.languageCode === 'kn');
   }, [activeLanguageCode]);
+
+  // Language completion statistics: Certificate unlocked ONLY when ALL videos in this language are completed!
+  const completedInLanguageCount = useMemo(() => {
+    return languageLessons.filter((vid) => completedVideos.includes(vid.id)).length;
+  }, [languageLessons, completedVideos]);
+
+  const isLanguageFullyCompleted =
+    languageLessons.length > 0 && completedInLanguageCount >= languageLessons.length;
+
+  const langProgressPercent = languageLessons.length > 0
+    ? Math.min(100, Math.round((completedInLanguageCount / languageLessons.length) * 100))
+    : 0;
 
   const fallbackLesson: VideoLesson = languageLessons[0] || ALL_VIDEO_LESSONS[0];
   const [selectedLesson, setSelectedLesson] = useState<VideoLesson>(fallbackLesson);
@@ -193,27 +208,43 @@ export const VideosPage: React.FC = () => {
     };
   }, [activeSentenceIndex, isPlaying, activeLesson.id, playbackRate, isMuted]);
 
-  // Auto-advance to next video in curriculum and award completion certificate
+  // Auto-advance to next video in curriculum (Certificate unlocked ONLY when ALL videos in language are completed)
   const handleAutoAdvanceNextVideo = () => {
+    let updatedCompleted = completedVideos;
     if (!completedVideos.includes(activeLesson.id)) {
-      setCompletedVideos((prev) => [...prev, activeLesson.id]);
+      updatedCompleted = [...completedVideos, activeLesson.id];
+      setCompletedVideos(updatedCompleted);
+      StorageService.setItem('completed_video_lessons', updatedCompleted);
     }
-    // Automatically open Official Certificate of Fluency
-    setShowCertificateModal(true);
 
-    const currentIndex = filteredVideos.findIndex((v) => v.id === activeLesson.id);
-    const nextIndex = (currentIndex + 1) % filteredVideos.length;
-    const nextLesson = filteredVideos[nextIndex];
+    const newLangCount = languageLessons.filter((v) => updatedCompleted.includes(v.id)).length;
+    const isNowAllDone = languageLessons.length > 0 && newLangCount >= languageLessons.length;
 
-    setSelectedLesson(nextLesson);
-    setActiveSentenceIndex(0);
-    setIsPlaying(false);
+    if (isNowAllDone) {
+      // Completed ALL videos in this language! Pop up the Certificate of Fluency!
+      setShowCertificateModal(true);
+      setIsPlaying(false);
+      notify({
+        type: 'success',
+        title: `🏆 All ${activeLesson.languageName} Videos Completed!`,
+        message: `Outstanding! You completed all ${languageLessons.length} videos in ${activeLesson.languageName}! Official Certificate of Fluency unlocked!`,
+      });
+    } else {
+      // Advance to next video in curriculum
+      const currentIndex = filteredVideos.findIndex((v) => v.id === activeLesson.id);
+      const nextIndex = (currentIndex + 1) % filteredVideos.length;
+      const nextLesson = filteredVideos[nextIndex];
 
-    notify({
-      type: 'success',
-      title: 'Lesson Completed! 🎓',
-      message: `Earned +${activeLesson.xpReward} XP! Certificate of Fluency generated.`,
-    });
+      setSelectedLesson(nextLesson);
+      setActiveSentenceIndex(0);
+      setIsPlaying(true);
+
+      notify({
+        type: 'success',
+        title: 'Video Finished! 🎬 Advancing Next',
+        message: `Progress: ${newLangCount}/${languageLessons.length} in ${activeLesson.languageName}. Now playing: "${nextLesson.title}"`,
+      });
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -360,16 +391,31 @@ export const VideosPage: React.FC = () => {
   };
 
   const handleCompleteLesson = () => {
+    let updatedCompleted = completedVideos;
     if (!completedVideos.includes(activeLesson.id)) {
-      setCompletedVideos((prev) => [...prev, activeLesson.id]);
+      updatedCompleted = [...completedVideos, activeLesson.id];
+      setCompletedVideos(updatedCompleted);
+      StorageService.setItem('completed_video_lessons', updatedCompleted);
+    }
+
+    const newLangCount = languageLessons.filter((v) => updatedCompleted.includes(v.id)).length;
+    const isNowAllDone = languageLessons.length > 0 && newLangCount >= languageLessons.length;
+
+    if (isNowAllDone) {
+      // Completed ALL videos in this language! Pop up Certificate
+      setShowCertificateModal(true);
+      notify({
+        type: 'success',
+        title: `🏆 ${activeLesson.languageName} Fluency Mastered!`,
+        message: `Incredible achievement! You have completed all ${languageLessons.length} videos in ${activeLesson.languageName}! Official Certificate of Fluency unlocked!`,
+      });
+    } else {
       notify({
         type: 'success',
         title: 'Lesson Mastered! 🏆',
-        message: `Earned +${activeLesson.xpReward} XP for completing "${activeLesson.title}".`,
+        message: `Earned +${activeLesson.xpReward} XP for "${activeLesson.title}". Language Progress: ${newLangCount}/${languageLessons.length} in ${activeLesson.languageName}. Complete all videos in ${activeLesson.languageName} to unlock your Fluency Certificate!`,
       });
     }
-    // Automatically trigger official Certificate on lesson/course completion!
-    setShowCertificateModal(true);
   };
 
   const isCompleted = completedVideos.includes(activeLesson.id);
@@ -397,23 +443,91 @@ export const VideosPage: React.FC = () => {
         badge="Continuous Flow"
       />
 
-      {/* Language Switcher Bar */}
-      <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
-        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 pl-1">
-          <BookOpen className="w-3.5 h-3.5 text-blue-500" />
-          <span>Course Language:</span>
-        </span>
-        <select
-          value={activeLanguageCode}
-          onChange={(e) => handleLanguageChange(e.target.value)}
-          className="bg-white dark:bg-slate-900 text-xs font-bold py-1 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none"
-        >
-          {SUPPORTED_LANGUAGES.map((l) => (
-            <option key={l.code} value={l.code}>
-              {l.flag} {l.name}
-            </option>
-          ))}
-        </select>
+      {/* Language Switcher Bar & Fluency Progress */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80">
+          <span className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 pl-1">
+            <BookOpen className="w-3.5 h-3.5 text-blue-500" />
+            <span>Course Language:</span>
+          </span>
+          <select
+            value={activeLanguageCode}
+            onChange={(e) => handleLanguageChange(e.target.value)}
+            className="bg-white dark:bg-slate-900 text-xs font-bold py-1 px-3 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 cursor-pointer focus:outline-none"
+          >
+            {SUPPORTED_LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>
+                {l.flag} {l.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Language Fluency Certificate Progress Tracker */}
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-slate-50 dark:from-slate-900 dark:via-blue-950/40 dark:to-slate-900 border border-blue-200/70 dark:border-blue-900/50 shadow-xs space-y-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div
+                className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                  isLanguageFullyCompleted
+                    ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-600'
+                    : 'bg-blue-100 dark:bg-blue-900/60 text-blue-600'
+                }`}
+              >
+                <Award className="w-4 h-4 fill-current" />
+              </div>
+              <div className="min-w-0">
+                <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block truncate">
+                  {activeLesson.languageName} Fluency Certificate Progress
+                </span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                  {completedInLanguageCount} of {languageLessons.length} videos completed ({langProgressPercent}%)
+                </span>
+              </div>
+            </div>
+
+            {isLanguageFullyCompleted ? (
+              <button
+                type="button"
+                onClick={() => setShowCertificateModal(true)}
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold text-[11px] shadow-sm hover:scale-105 active:scale-95 transition flex items-center gap-1.5 shrink-0"
+              >
+                <span>🏆</span>
+                <span>View Certificate</span>
+              </button>
+            ) : (
+              <div className="text-right shrink-0">
+                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 bg-white/90 dark:bg-slate-800 px-2 py-0.5 rounded-lg border border-slate-200/80 dark:border-slate-700/80 inline-flex items-center gap-1">
+                  <span>🔒</span>
+                  <span>Certificate at 100%</span>
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full bg-slate-200/80 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                isLanguageFullyCompleted
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-600'
+                  : 'bg-gradient-to-r from-blue-500 to-indigo-600'
+              }`}
+              style={{ width: `${langProgressPercent}%` }}
+            />
+          </div>
+
+          <div className="flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400 font-medium pt-0.5">
+            <span>
+              {isLanguageFullyCompleted
+                ? `🎉 All ${activeLesson.languageName} videos completed! Official Certificate unlocked.`
+                : `Complete all ${languageLessons.length} videos in ${activeLesson.languageName} to unlock your Certificate.`}
+            </span>
+            <span className="font-mono font-bold text-slate-700 dark:text-slate-300 shrink-0 ml-2">
+              {langProgressPercent}% Done
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Native Flowing Video Stage (100% In-App, Zero External Dependencies) */}
@@ -1068,13 +1182,13 @@ export const VideosPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Official Certificate of Fluency Modal issued to user's name */}
+      {/* Official Certificate of Fluency Modal issued to user's name upon completing all videos in language */}
       <CertificateModal
         isOpen={showCertificateModal}
         onClose={() => setShowCertificateModal(false)}
         userName={user?.name || (user?.email ? user.email.split('@')[0] : 'Active Learner')}
         languageName={activeLesson.languageName}
-        courseTitle={`${activeLesson.languageName} Conversational Mastery — ${activeLesson.title}`}
+        courseTitle={`${activeLesson.languageName} Complete Fluency Curriculum (${languageLessons.length} Real-Life Masterclasses)`}
       />
     </div>
   );
