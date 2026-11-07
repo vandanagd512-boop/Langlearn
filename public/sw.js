@@ -1,4 +1,4 @@
-const CACHE_NAME = 'langlearn-v6';
+const CACHE_NAME = 'langlearn-v7';
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
