@@ -43,8 +43,15 @@
       })();
     </script>
     <script>
-      // Register Service Worker with auto-update
+      // Register Service Worker with automatic update & controller sync
       if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            window.location.reload();
+          }
+        });
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js').then((reg) => {
             reg.update().catch(() => {});
