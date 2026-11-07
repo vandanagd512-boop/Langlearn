@@ -23,9 +23,11 @@ export const Header: React.FC = () => {
       <div className="flex h-full items-center justify-between px-3.5">
         {/* Left: Brand App Logo */}
         <Link to="/" className="flex items-center gap-2 select-none group">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-sm font-black text-sm group-hover:scale-105 transition-transform">
-            L
-          </div>
+          <img
+            src="/logo.svg"
+            alt="LangLearn Logo"
+            className="w-8 h-8 rounded-xl shadow-xs group-hover:scale-105 transition-transform shrink-0"
+          />
           <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-slate-100 font-sans">
             LangLearn
           </span>

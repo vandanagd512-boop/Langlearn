@@ -15,22 +15,12 @@ export const ScreenWelcome: React.FC<ScreenWelcomeProps> = ({ onNext, onSkip }) 
       <div className="flex flex-col items-center space-y-3">
         <div className="relative group">
           <div className="absolute -inset-2 rounded-3xl bg-blue-500/20 blur-xl animate-pulseGlow" />
-          <div className="relative w-20 h-20 rounded-2xl bg-gradient-to-tr from-blue-600 via-blue-700 to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-blue-500/20 border border-white/20">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 64 64"
-              className="w-12 h-12 drop-shadow-md"
-              fill="none"
-            >
-              <path
-                d="M22 18V46H42"
-                stroke="white"
-                strokeWidth="6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <circle cx="42" cy="24" r="4.5" fill="#93C5FD" />
-            </svg>
+          <div className="relative w-20 h-20 rounded-2xl shadow-xl shadow-blue-500/20 overflow-hidden">
+            <img
+              src="/logo.svg"
+              alt="LangLearn Logo"
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
 

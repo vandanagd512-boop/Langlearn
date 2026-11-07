@@ -1,11 +1,57 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <rect width="64" height="64" rx="16" fill="url(#grad)" />
-  <path d="M22 18V46H42" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="42" cy="24" r="4" fill="#60A5FA" />
   <defs>
-    <linearGradient id="grad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#2563EB" />
-      <stop offset="1" stop-color="#4F46E5" />
+    <!-- Background Rich Blue to Deep Indigo Gradient -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1E40AF" />
+      <stop offset="0.5" stop-color="#2563EB" />
+      <stop offset="1" stop-color="#4338CA" />
+    </linearGradient>
+
+    <!-- Global Polyglot Sphere Gradient -->
+    <linearGradient id="globeGrad" x1="21" y1="13" x2="43" y2="35" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8" />
+      <stop offset="0.6" stop-color="#0284C7" />
+      <stop offset="1" stop-color="#0369A1" />
+    </linearGradient>
+
+    <!-- Open Book Pages Gradient -->
+    <linearGradient id="bookLeftGrad" x1="15" y1="33" x2="32" y2="47" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" />
+      <stop offset="1" stop-color="#E0F2FE" />
+    </linearGradient>
+
+    <linearGradient id="bookRightGrad" x1="49" y1="33" x2="32" y2="47" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" />
+      <stop offset="1" stop-color="#E0F2FE" />
     </linearGradient>
   </defs>
+
+  <!-- App Icon Squircle Container -->
+  <rect width="64" height="64" rx="16" fill="url(#bgGrad)" />
+  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="15.25" fill="none" stroke="white" stroke-width="1.5" stroke-opacity="0.22" />
+
+  <!-- Global Polyglot Sphere (Globe) -->
+  <circle cx="32" cy="24" r="10.5" fill="url(#globeGrad)" stroke="white" stroke-width="1.3" />
+  <!-- Latitude & Longitude Meridian Lines -->
+  <ellipse cx="32" cy="24" rx="4.8" ry="10.5" fill="none" stroke="white" stroke-width="1" stroke-opacity="0.85" />
+  <path d="M21.8 24C24.5 27.2 39.5 27.2 42.2 24" fill="none" stroke="white" stroke-width="1" stroke-opacity="0.85" />
+  <path d="M23 18C25.5 20.2 38.5 20.2 41 18" fill="none" stroke="white" stroke-width="0.85" stroke-opacity="0.7" />
+
+  <!-- Dynamic Speech Waves (Radiating from Globe) -->
+  <path d="M43.5 17C46 19 47.2 21.5 47.2 24" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" />
+  <path d="M47.5 13C51 16 52.8 19.8 52.8 24" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" />
+
+  <!-- Open Learning Book Pages -->
+  <!-- Left Page -->
+  <path d="M32 46.5C26.5 43.5 20.5 43.5 15 46V35C20.5 32.5 26.5 32.5 32 35.5Z" fill="url(#bookLeftGrad)" />
+  <!-- Right Page -->
+  <path d="M32 46.5C37.5 43.5 43.5 43.5 49 46V35C43.5 32.5 37.5 32.5 32 35.5Z" fill="url(#bookRightGrad)" />
+
+  <!-- Book Spine Divider -->
+  <path d="M32 35.5V47.5" stroke="#93C5FD" stroke-width="1.4" stroke-linecap="round" />
+  <!-- Book page accent curves -->
+  <path d="M15 46C20.5 43.5 26.5 43.5 32 46.5C37.5 43.5 43.5 43.5 49 46" stroke="#94A3B8" stroke-width="0.75" fill="none" stroke-opacity="0.6" />
+
+  <!-- Polyglot AI Sparkle Star -->
+  <path d="M17.5 14L18.5 16.8L21.5 17.5L18.5 18.2L17.5 21L16.5 18.2L13.5 17.5L16.5 16.8Z" fill="#FEF08A" />
 </svg>

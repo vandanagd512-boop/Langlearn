@@ -57,24 +57,11 @@ export const SplashPage: React.FC = () => {
 
           {/* Logo container with float and scale animations */}
           <div className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-3xl p-1 bg-gradient-to-b from-white/90 to-white/40 dark:from-slate-800/80 dark:to-slate-900/60 shadow-2xl backdrop-blur-xl border border-white/80 dark:border-slate-700/60 animate-scaleIn">
-            <div className="w-full h-full rounded-[22px] overflow-hidden bg-gradient-to-tr from-blue-600 via-blue-700 to-indigo-600 flex items-center justify-center shadow-inner animate-float">
-              {/* Scalable Vector Emblem */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 64 64"
-                className="w-16 h-16 sm:w-20 sm:h-20 drop-shadow-md"
-                fill="none"
-              >
-                <path
-                  d="M22 18V46H42"
-                  stroke="white"
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <circle cx="42" cy="24" r="4.5" fill="#93C5FD" />
-              </svg>
-            </div>
+            <img
+              src="/logo.svg"
+              alt="LangLearn Logo"
+              className="w-full h-full rounded-[22px] shadow-inner animate-float"
+            />
           </div>
         </div>
 

@@ -150,9 +150,11 @@ export const AuthPage: React.FC = () => {
           onClick={() => navigate('/')}
           className="flex items-center gap-2.5 font-bold text-base cursor-pointer select-none group"
         >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-sm font-black text-xs group-hover:scale-105 transition-transform">
-            L
-          </div>
+          <img
+            src="/logo.svg"
+            alt="LangLearn Logo"
+            className="w-8 h-8 rounded-xl shadow-xs group-hover:scale-105 transition-transform shrink-0"
+          />
           <span className="tracking-tight text-slate-900 dark:text-slate-100 font-sans">
             {APP_NAME}
           </span>

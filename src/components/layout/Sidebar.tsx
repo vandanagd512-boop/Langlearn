@@ -38,9 +38,11 @@ export const Sidebar: React.FC = () => {
         {/* Sidebar Brand Header */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-slate-200/80 dark:border-slate-800">
           <NavLink to="/" className="flex items-center gap-3 font-bold text-lg text-slate-900 dark:text-slate-100">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-sm font-black text-sm">
-              L
-            </div>
+            <img
+              src="/logo.svg"
+              alt="LangLearn Logo"
+              className="w-8 h-8 rounded-xl shadow-xs shrink-0"
+            />
             <div className="flex flex-col">
               <span className="text-sm font-bold tracking-tight leading-none">LangLearn</span>
               <span className="text-[10px] text-slate-400 font-medium">AI Language Engine</span>
