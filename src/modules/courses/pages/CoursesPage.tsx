@@ -28,7 +28,7 @@ const BOOKMARKED_COURSES_KEY = 'bookmarked_courses';
 export const CoursesPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { activeLanguageCode, setActiveLanguageCode } = useAppStore();
+  const { activeLanguageCode, setActiveLanguageCode, user } = useAppStore();
   const { notify } = useNotification();
 
   // Determine current language from query param or store
@@ -331,7 +331,7 @@ export const CoursesPage: React.FC = () => {
       <CertificateModal
         isOpen={showCertificate}
         onClose={() => setShowCertificate(false)}
-        userName="Dedicated Language Scholar"
+        userName={user?.name || (user?.email ? user.email.split('@')[0] : 'Active Learner')}
         languageName={courseData.languageName}
         courseTitle={`${courseData.languageName} Comprehensive Mastery & Real-Life Situations`}
       />

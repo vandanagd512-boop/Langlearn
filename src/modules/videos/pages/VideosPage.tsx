@@ -28,12 +28,13 @@ import { VideoLesson, VideoDurationCategory, VideoProficiencyLevel } from '../ty
 import { AnimatedCharacterAvatar } from '../components/AnimatedCharacterAvatar';
 import { SpeechService } from '@/services/speech/speech.service';
 import { PronunciationService, PronunciationScoreResult } from '@/services/speech/pronunciation.service';
+import { CertificateModal } from '@/components/certificate/CertificateModal';
 import { useNotification } from '@/context/NotificationContext';
 import { useAppStore } from '@/state/store';
 import { SUPPORTED_LANGUAGES } from '@/config/constants';
 
 export const VideosPage: React.FC = () => {
-  const { activeLanguageCode, setActiveLanguageCode } = useAppStore();
+  const { activeLanguageCode, setActiveLanguageCode, user } = useAppStore();
   const { notify } = useNotification();
 
   const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
@@ -47,6 +48,7 @@ export const VideosPage: React.FC = () => {
   const [completedVideos, setCompletedVideos] = useState<string[]>(['vid-kn-beginner-1']);
   const [isPracticingTurn, setIsPracticingTurn] = useState<boolean>(false);
   const [turnScoreResult, setTurnScoreResult] = useState<PronunciationScoreResult | null>(null);
+  const [showCertificateModal, setShowCertificateModal] = useState<boolean>(false);
 
   // Lessons list filtered by active language
   const languageLessons = useMemo(() => {
@@ -133,10 +135,10 @@ export const VideosPage: React.FC = () => {
 
     const playSentenceStep = async () => {
       if (!isMuted && currentSentence) {
-        // Speaker alternation: 0 for Speaker A (Ravi), 1 for Speaker B (Arun)
+        // Speaker alternation: 0 for Speaker A (Vandana - female), 1 for Speaker B (Gowda - male)
         const speakerIndex = currentSentence.speakerIndex ?? (activeSentenceIndex % 2 === 0 ? 0 : 1);
-        // Two distinct voice tones: 0.85 (deep, warm tone) vs 1.25 (bright, expressive tone)
-        const pitch = speakerIndex === 0 ? 0.85 : 1.25;
+        // Two distinct voice tones: 1.20 (female bright tone) vs 0.85 (male warm, deep tone)
+        const pitch = speakerIndex === 0 ? 1.20 : 0.85;
 
         // Use SpeechSynthesis with safety watchdog timer so mobile browsers NEVER stall
         await new Promise<void>((resolve) => {
@@ -191,20 +193,26 @@ export const VideosPage: React.FC = () => {
     };
   }, [activeSentenceIndex, isPlaying, activeLesson.id, playbackRate, isMuted]);
 
-  // Auto-advance to next video in curriculum
+  // Auto-advance to next video in curriculum and award completion certificate
   const handleAutoAdvanceNextVideo = () => {
+    if (!completedVideos.includes(activeLesson.id)) {
+      setCompletedVideos((prev) => [...prev, activeLesson.id]);
+    }
+    // Automatically open Official Certificate of Fluency
+    setShowCertificateModal(true);
+
     const currentIndex = filteredVideos.findIndex((v) => v.id === activeLesson.id);
     const nextIndex = (currentIndex + 1) % filteredVideos.length;
     const nextLesson = filteredVideos[nextIndex];
 
     setSelectedLesson(nextLesson);
     setActiveSentenceIndex(0);
-    setIsPlaying(true);
+    setIsPlaying(false);
 
     notify({
       type: 'success',
-      title: 'Auto-Advancing to Next Video! 🎬',
-      message: `Now playing: "${nextLesson.title}"`,
+      title: 'Lesson Completed! 🎓',
+      message: `Earned +${activeLesson.xpReward} XP! Certificate of Fluency generated.`,
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -360,6 +368,8 @@ export const VideosPage: React.FC = () => {
         message: `Earned +${activeLesson.xpReward} XP for completing "${activeLesson.title}".`,
       });
     }
+    // Automatically trigger official Certificate on lesson/course completion!
+    setShowCertificateModal(true);
   };
 
   const isCompleted = completedVideos.includes(activeLesson.id);
@@ -369,8 +379,8 @@ export const VideosPage: React.FC = () => {
   );
 
   const characterPair = activeLesson.characterPair || {
-    speakerA: { name: 'Ravi', avatar: '👨', role: 'Inquirer', gender: 'male' },
-    speakerB: { name: 'Arun', avatar: '🧑', role: 'Friend', gender: 'male' },
+    speakerA: { name: 'Vandana', avatar: '👩', role: 'Inquirer', gender: 'female' },
+    speakerB: { name: 'Gowda', avatar: '👨', role: 'Friend', gender: 'male' },
   };
 
   const activeSpeakerIndex =
@@ -408,7 +418,7 @@ export const VideosPage: React.FC = () => {
 
       {/* Native Flowing Video Stage (100% In-App, Zero External Dependencies) */}
       <Card className="overflow-hidden p-0 border border-slate-200/80 dark:border-slate-800 shadow-2xl bg-slate-950 text-white">
-        <div className="relative aspect-video w-full flex flex-col justify-between overflow-hidden select-none">
+        <div className="relative min-h-[470px] sm:min-h-[480px] w-full flex flex-col justify-between overflow-hidden select-none">
           {!isPlaying ? (
             /* HD Video Cover Poster when Paused */
             <div
@@ -432,27 +442,27 @@ export const VideosPage: React.FC = () => {
                 >
                   <Play className="w-8 h-8 fill-current ml-1" />
                 </button>
-                <span className="text-xs font-bold mt-2.5 tracking-wide drop-shadow">
+                <span className="text-sm font-bold mt-3 tracking-wide drop-shadow">
                   Tap to Start Flowing Video Lesson
                 </span>
-                <span className="text-[10px] text-white/80 mt-0.5">
-                  Sentence-by-Sentence Narration • Auto-Advance to Next Video
+                <span className="text-xs text-white/80 mt-1 max-w-xs">
+                  Real-life 2-way dialogue with Vandana & Gowda • Spoken native narration
                 </span>
               </div>
 
-              <div className="bg-black/60 backdrop-blur-md p-2.5 rounded-xl text-xs z-10 flex items-center justify-between">
+              <div className="bg-black/70 backdrop-blur-md p-3 rounded-2xl text-xs z-10 flex items-center justify-between border border-white/10">
                 <div className="min-w-0 pr-2">
-                  <span className="font-bold block truncate">{activeLesson.title}</span>
-                  <span className="text-[10px] text-white/80 block truncate">
-                    {activeLesson.topicLabel} • 2-Character Real-Life Dialogue
+                  <span className="font-bold block truncate text-sm">{activeLesson.title}</span>
+                  <span className="text-[11px] text-white/80 block truncate">
+                    {activeLesson.topicLabel} • 2-Character Interactive Dialogue
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0 bg-white/10 px-2 py-1 rounded-lg border border-white/15">
+                <div className="flex items-center gap-2 shrink-0 bg-white/10 px-2.5 py-1.5 rounded-xl border border-white/15">
                   <span className="text-xs font-bold flex items-center gap-1">
                     <span>{characterPair.speakerA.avatar}</span>
                     <span>{characterPair.speakerA.name}</span>
                   </span>
-                  <span className="text-[10px] text-amber-300 font-extrabold">&</span>
+                  <span className="text-xs text-amber-300 font-extrabold">&</span>
                   <span className="text-xs font-bold flex items-center gap-1">
                     <span>{characterPair.speakerB.avatar}</span>
                     <span>{characterPair.speakerB.name}</span>
@@ -461,8 +471,8 @@ export const VideosPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            /* Active Live Presentation with Continuous Sentence Progression */
-            <div className={`relative inset-0 w-full h-full bg-gradient-to-tr ${activeLesson.gradient} flex flex-col justify-between p-3.5`}>
+            /* Active Live Presentation with In-Video Dual Dialogue Stage */
+            <div className={`relative inset-0 w-full h-full min-h-[470px] sm:min-h-[480px] bg-gradient-to-tr ${activeLesson.gradient} flex flex-col justify-between p-3.5`}>
               {/* Top Status Bar */}
               <div className="flex items-center justify-between text-xs z-10">
                 <div className="flex items-center gap-1.5">
@@ -493,30 +503,30 @@ export const VideosPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Center Flowing Presentation Stage - Dual-Character Stage */}
-              <div className="my-auto text-center space-y-2 z-10 px-1">
-                {/* Dual Characters Conversation Duo with Animated 2D Face Avatars */}
-                <div className="flex items-center justify-between gap-2 max-w-sm mx-auto px-2 py-1">
-                  {/* Speaker A (e.g. Ravi) */}
+              {/* Center Flowing Presentation Stage - Characters & In-Video Dialogue */}
+              <div className="my-auto space-y-2 z-10 w-full max-w-md mx-auto">
+                {/* Dual Characters Duo: Vandana (left) & Gowda (right) */}
+                <div className="flex items-center justify-between gap-2 px-1">
+                  {/* Speaker A: Vandana */}
                   <div
-                    className={`p-2 rounded-2xl transition-all duration-300 ${
+                    className={`flex-1 p-2 rounded-2xl transition-all duration-300 ${
                       activeSpeakerIndex === 0
-                        ? 'bg-blue-600/40 border border-blue-400 ring-2 ring-blue-400/50 shadow-lg scale-105'
-                        : 'opacity-65 bg-black/40 border border-white/10 scale-95'
+                        ? 'bg-blue-600/40 border-2 border-blue-400 ring-2 ring-blue-400/40 shadow-xl scale-102'
+                        : 'opacity-55 bg-black/40 border border-white/10 scale-95'
                     }`}
                   >
                     <AnimatedCharacterAvatar
                       character={characterPair.speakerA}
                       isSpeaking={activeSpeakerIndex === 0}
                       isListening={activeSpeakerIndex === 1}
-                      voiceToneLabel="Deep Tone"
+                      voiceToneLabel="Female Tone"
                       size="md"
                     />
                   </div>
 
                   {/* Center Voice Wave & Turn Indicator */}
-                  <div className="flex flex-col items-center justify-center px-1">
-                    <div className="flex items-center gap-0.5 h-3.5">
+                  <div className="flex flex-col items-center justify-center px-1 shrink-0">
+                    <div className="flex items-center gap-0.5 h-4">
                       {[40, 80, 50, 95, 60].map((h, i) => (
                         <span
                           key={i}
@@ -534,88 +544,124 @@ export const VideosPage: React.FC = () => {
                     <span className="text-[9px] font-black text-amber-300 uppercase tracking-wider mt-1">
                       Turn {activeSentenceIndex + 1}/{totalSentences}
                     </span>
-                    <span className="text-[7px] text-white/60 font-mono">
-                      {activeSpeakerIndex === 0 ? 'Voice #1' : 'Voice #2'}
+                    <span className="text-[8px] text-white/70 font-mono">
+                      {activeSpeakerIndex === 0 ? 'Vandana speaks' : 'Gowda replies'}
                     </span>
                   </div>
 
-                  {/* Speaker B (e.g. Arun) */}
+                  {/* Speaker B: Gowda */}
                   <div
-                    className={`p-2 rounded-2xl transition-all duration-300 ${
+                    className={`flex-1 p-2 rounded-2xl transition-all duration-300 ${
                       activeSpeakerIndex === 1
-                        ? 'bg-emerald-600/40 border border-emerald-400 ring-2 ring-emerald-400/50 shadow-lg scale-105'
-                        : 'opacity-65 bg-black/40 border border-white/10 scale-95'
+                        ? 'bg-emerald-600/40 border-2 border-emerald-400 ring-2 ring-emerald-400/40 shadow-xl scale-102'
+                        : 'opacity-55 bg-black/40 border border-white/10 scale-95'
                     }`}
                   >
                     <AnimatedCharacterAvatar
                       character={characterPair.speakerB}
                       isSpeaking={activeSpeakerIndex === 1}
                       isListening={activeSpeakerIndex === 0}
-                      voiceToneLabel="Bright Tone"
+                      voiceToneLabel="Male Tone"
                       size="md"
                     />
                   </div>
                 </div>
 
-                {/* Main Active Lesson Slide with Prominent Speaker Tag */}
-                <div className="p-3.5 rounded-2xl bg-black/75 backdrop-blur-md border border-white/20 max-w-sm mx-auto shadow-2xl space-y-2 transition-all duration-300">
-                  {/* Active Speaker Banner */}
-                  <div className="flex items-center justify-between pb-1 border-b border-white/15">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm">{activeSpeaker.avatar}</span>
-                      <span className="text-xs font-black tracking-wide text-white">
-                        {activeSpeaker.name}
-                      </span>
-                      <span
-                        className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full ${
-                          activeSpeakerIndex === 0 ? 'bg-blue-500 text-white' : 'bg-emerald-500 text-white'
-                        }`}
-                      >
-                        {activeSpeakerIndex === 0 ? 'Speaking / Voice 1' : 'Replying / Voice 2'}
+                {/* IN-VIDEO SPEECH BUBBLE: Pointing directly to active speaker */}
+                <div className="relative pt-1">
+                  {/* Directional speech pointer arrow pointing UP to Vandana or Gowda */}
+                  <div
+                    className={`absolute -top-1 w-3.5 h-3.5 rotate-45 transition-all duration-300 ${
+                      activeSpeakerIndex === 0
+                        ? 'left-10 bg-slate-950 border-t-2 border-l-2 border-blue-400'
+                        : 'right-10 bg-slate-950 border-t-2 border-l-2 border-emerald-400'
+                    }`}
+                  />
+
+                  {/* Main Speech Balloon Card */}
+                  <div
+                    className={`p-3.5 rounded-2xl bg-slate-950/90 backdrop-blur-xl border-2 transition-all duration-300 shadow-2xl space-y-2.5 ${
+                      activeSpeakerIndex === 0
+                        ? 'border-blue-400/80 shadow-blue-500/20'
+                        : 'border-emerald-400/80 shadow-emerald-500/20'
+                    }`}
+                  >
+                    {/* Active Speaker Banner inside Video */}
+                    <div className="flex items-center justify-between pb-1.5 border-b border-white/15">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-base">{activeSpeaker.avatar}</span>
+                        <span className="text-xs font-black tracking-wide text-white">
+                          {activeSpeaker.name}
+                        </span>
+                        <span
+                          className={`text-[8px] font-extrabold px-2 py-0.5 rounded-full ${
+                            activeSpeakerIndex === 0
+                              ? 'bg-blue-500 text-white shadow-xs'
+                              : 'bg-emerald-500 text-white shadow-xs'
+                          }`}
+                        >
+                          {activeSpeakerIndex === 0 ? 'Asking / Voice 1' : 'Replying / Voice 2'}
+                        </span>
+                      </div>
+                      <span className="text-[9px] font-mono text-amber-300 bg-white/10 px-2 py-0.5 rounded-full border border-white/15 flex items-center gap-1">
+                        <Volume2 className="w-2.5 h-2.5" />
+                        Speaking Now
                       </span>
                     </div>
-                    <span className="text-[9px] font-mono text-white/70 bg-white/10 px-1.5 py-0.5 rounded">
-                      {activeSpeaker.role}
-                    </span>
-                  </div>
 
-                  <p className="text-sm md:text-base font-bold text-white drop-shadow leading-snug pt-0.5">
-                    {currentSentence?.text}
-                  </p>
-                  <p className="text-xs text-white/80 italic">
-                    "{currentSentence?.translation}"
-                  </p>
+                    {/* Dialogue Line Spoken inside Video */}
+                    <div className="space-y-1">
+                      <p className="text-sm sm:text-base font-bold text-white drop-shadow-md leading-snug">
+                        {currentSentence?.text}
+                      </p>
+                      <p className="text-xs sm:text-sm text-cyan-200 font-medium italic drop-shadow-xs">
+                        "{currentSentence?.translation}"
+                      </p>
+                    </div>
 
-                  {/* Real Pronunciation Practice inside Video */}
-                  <div className="pt-1.5 border-t border-white/10 flex items-center justify-between text-xs">
-                    <button
-                      type="button"
-                      onClick={handlePracticeCurrentSentence}
-                      className={`px-2.5 py-1 rounded-xl text-[10px] font-bold transition flex items-center gap-1.5 shadow-sm ${
-                        isPracticingTurn
-                          ? 'bg-rose-500 text-white animate-pulse'
-                          : 'bg-white/15 hover:bg-white/25 text-white active:scale-95'
-                      }`}
-                    >
-                      <Mic className="w-3 h-3 text-amber-300" />
-                      <span>{isPracticingTurn ? 'Listening to you...' : 'Practice Speaking Line'}</span>
-                    </button>
-
-                    {turnScoreResult ? (
-                      <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-500/40">
-                        Accuracy: {turnScoreResult.score}% ⭐
-                      </span>
-                    ) : (
-                      <span className="text-[9px] text-white/60 font-mono">
-                        Tap mic to test voice
-                      </span>
+                    {/* Previous Context Ribbon inside Video */}
+                    {activeSentenceIndex > 0 && activeLesson.transcript[activeSentenceIndex - 1] && (
+                      <div className="pt-1.5 border-t border-white/10 flex items-center gap-1.5 text-[10px] text-white/60">
+                        <span className="font-bold text-amber-300 shrink-0">
+                          {activeSpeakerIndex === 0 ? characterPair.speakerB.name : characterPair.speakerA.name}:
+                        </span>
+                        <span className="italic truncate">
+                          "{activeLesson.transcript[activeSentenceIndex - 1]?.text}"
+                        </span>
+                      </div>
                     )}
+
+                    {/* Real Pronunciation Practice inside Video */}
+                    <div className="pt-2 border-t border-white/10 flex items-center justify-between text-xs">
+                      <button
+                        type="button"
+                        onClick={handlePracticeCurrentSentence}
+                        className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition flex items-center gap-1.5 shadow-sm ${
+                          isPracticingTurn
+                            ? 'bg-rose-500 text-white animate-pulse'
+                            : 'bg-white/15 hover:bg-white/25 text-white active:scale-95'
+                        }`}
+                      >
+                        <Mic className="w-3.5 h-3.5 text-amber-300" />
+                        <span>{isPracticingTurn ? 'Listening to you...' : 'Practice Speaking Line'}</span>
+                      </button>
+
+                      {turnScoreResult ? (
+                        <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded-full border border-emerald-500/40">
+                          Accuracy: {turnScoreResult.score}% ⭐
+                        </span>
+                      ) : (
+                        <span className="text-[9px] text-white/60 font-mono">
+                          Tap mic to test voice
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Bottom Scrubber & Time Bar */}
-              <div className="space-y-1 z-10">
+              <div className="space-y-1 z-10 pt-2">
                 <div className="w-full bg-white/25 h-1.5 rounded-full overflow-hidden cursor-pointer">
                   <div
                     className="bg-blue-400 h-full rounded-full transition-all duration-300"
@@ -732,7 +778,7 @@ export const VideosPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-            <span>2-Character Dialogue Transcript ({totalSentences} Turns)</span>
+            <span>Interactive Dialogue Timeline ({characterPair.speakerA.name} & {characterPair.speakerB.name} • {totalSentences} Turns)</span>
           </h3>
           <span className="text-[10px] text-slate-400">Tap line to seek & listen</span>
         </div>
@@ -743,6 +789,11 @@ export const VideosPage: React.FC = () => {
             const lineSpeakerIndex = line.speakerIndex ?? (idx % 2 === 0 ? 0 : 1);
             const isSpeakerA = lineSpeakerIndex === 0;
             const speakerChar = isSpeakerA ? characterPair.speakerA : characterPair.speakerB;
+            const displayName = line.speaker === 'Ravi'
+              ? characterPair.speakerA.name
+              : line.speaker === 'Arun'
+              ? characterPair.speakerB.name
+              : (line.speaker || speakerChar.name);
 
             return (
               <button
@@ -766,7 +817,7 @@ export const VideosPage: React.FC = () => {
                         : 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700'
                     }`}
                   >
-                    {line.speakerAvatar || speakerChar.avatar}
+                    {isSpeakerA ? characterPair.speakerA.avatar : characterPair.speakerB.avatar}
                   </div>
                   <span
                     className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-bold ${
@@ -789,7 +840,7 @@ export const VideosPage: React.FC = () => {
                           : 'bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300'
                       }`}
                     >
-                      {line.speaker || speakerChar.name}
+                      {displayName}
                     </span>
                     <span className="text-[10px] text-slate-400">
                       {isSpeakerA ? 'Asking / Initiating' : 'Replying'}
@@ -1016,6 +1067,15 @@ export const VideosPage: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* Official Certificate of Fluency Modal issued to user's name */}
+      <CertificateModal
+        isOpen={showCertificateModal}
+        onClose={() => setShowCertificateModal(false)}
+        userName={user?.name || (user?.email ? user.email.split('@')[0] : 'Active Learner')}
+        languageName={activeLesson.languageName}
+        courseTitle={`${activeLesson.languageName} Conversational Mastery — ${activeLesson.title}`}
+      />
     </div>
   );
 };

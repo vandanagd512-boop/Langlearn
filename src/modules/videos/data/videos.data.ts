@@ -216,8 +216,8 @@ const TOPIC_DIALOGUE_REGISTRY: Record<string, TopicData> = {
   // 1. Basics - Greetings
   'greetings': {
     characterPair: {
-      speakerA: { name: 'Ravi', avatar: '👨', role: 'Inquirer', gender: 'male' },
-      speakerB: { name: 'Arun', avatar: '🧑', role: 'Friend', gender: 'male' },
+      speakerA: { name: 'Vandana', avatar: '👩', role: 'Inquirer', gender: 'female' },
+      speakerB: { name: 'Gowda', avatar: '👨', role: 'Friend', gender: 'male' },
     },
     vocab: [
       { term: 'నమస్కారం / ನಮಸ್ಕಾರ', phonetic: 'Namaskaram / Namaskara', meaning: 'Hello / Respectful greetings' },
@@ -225,14 +225,14 @@ const TOPIC_DIALOGUE_REGISTRY: Record<string, TopicData> = {
       { term: 'ధన్యవాదాలు / ಧನ್ಯವಾದಗಳು', phonetic: 'Dhanyavadalu / Dhanyavadagalu', meaning: 'Thank you very much' },
     ],
     dialogue: [
-      { speaker: 'Ravi', te: 'నమస్కారం అరుణ్ గారు! మీరు ఎలా ఉన్నారు?', kn: 'ನಮಸ್ಕಾರ ಅರುಣ್ ಅವರೇ! ನೀವು ಹೇಗಿದ್ದೀರಿ?', hi: 'नमस्ते अरुण जी! आप कैसे हैं?', en: 'Hello Arun! How are you doing today?', translation: 'Polite greeting and inquiry' },
-      { speaker: 'Arun', te: 'నమస్కారం రవి గారు! నేను చాలా బాగున్నాను, ధన్యవాదాలు.', kn: 'ನಮಸ್ಕಾರ ರವಿ! ನಾನು ತುಂಬಾ ಚೆನ್ನಾಗಿದ್ದೇನೆ, ಧನ್ಯವಾದಗಳು.', hi: 'नमस्ते रवि जी! मैं बिल्कुल ठीक हूँ, धन्यवाद।', en: 'Hello Ravi! I am doing very well, thank you.', translation: 'Replying with well-being' },
-      { speaker: 'Ravi', te: 'చాలా రోజుల తర్వాత కలిశాము. ఇంట్లో అందరూ క్షేమమేనా?', kn: 'ತುಂಬಾ ದಿನಗಳ ನಂತರ ಭೇಟಿಯಾದೆವು. ಮನೆಯಲ್ಲಿ ಎಲ್ಲರೂ ಆರಾಮವೇ?', hi: 'काफ़ी दिनों बाद मिले हैं। घर में सब कैसे हैं?', en: 'We are meeting after so long! Is everyone well at home?', translation: 'Asking about family' },
-      { speaker: 'Arun', te: 'అవును, మీ దయవల్ల ఇంట్లో అందరూ చాలా సంతోషంగా ఉన్నారు.', kn: 'ಹೌದು, ನಿಮ್ಮ ಆಶೀರ್ವಾದದಿಂದ ಮನೆಯಲ್ಲಿ ಎಲ್ಲರೂ ಸಂತೋಷವಾಗಿದ್ದಾರೆ.', hi: 'हाँ, आपकी कृपा से घर पर सब कुशल-मंगल हैं।', en: 'Yes, by grace everyone at home is doing great.', translation: 'Confirming family well-being' },
-      { speaker: 'Ravi', te: 'ఈ రోజు సాయంత్రం మా ఇంటికి కాఫీ తాగడానికి రండి.', kn: 'ಇಂದು ಸಂಜೆ ನಮ್ಮ ಮನೆಗೆ ಕಾಫಿ ಕುಡಿಯಲು ಬನ್ನಿ.', hi: 'आज शाम हमारे घर चाय-कॉफी पीने आइएगा।', en: 'Please come over to our home for coffee this evening.', translation: 'Social invitation' },
-      { speaker: 'Arun', te: 'తప్పకుండా వస్తాను రవి గారు, ఆహ్వానించినందుకు ధన్యవాదాలు.', kn: 'ಖಂಡಿತ ಬರುತ್ತೇನೆ ರವಿ, ಆಹ್ವಾನಿಸಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು.', hi: 'ज़रूर आऊँगा रवि जी, निमंत्रण के लिए धन्यवाद।', en: 'I will definitely come, thank you for inviting me.', translation: 'Accepting with thanks' },
-      { speaker: 'Ravi', te: 'సరే అయితే, సాయంత్రం కలుద్దాಂ. శుభదినం!', kn: 'ಸರಿ ಹಾಗಾದರೆ, ಸಂಜೆ ಭೇಟಿಯಾಗೋಣ. ಶುಭ ದಿನ!', hi: 'ठीक है फिर, शाम को मिलते हैं। शुभ दिन!', en: 'Alright then, see you in the evening. Have a nice day!', translation: 'Parting words' },
-      { speaker: 'Arun', te: 'మళ్ళీ కలుద్దాం రవి గారు, జాగ్రత్తగా వెళ్ళిరండి!', kn: 'ಮತ್ತೆ ಸಿಗೋಣ ರವಿ, ಜಾಗ್ರತೆಯಾಗಿ ಹೋಗಿ ಬನ್ನಿ!', hi: 'फिर मिलेंगे रवि जी, ध्यान से जाइएगा!', en: 'See you again Ravi, take care!', translation: 'Warm farewell' },
+      { speaker: 'Vandana', te: 'నమస్కారం గౌడ గారు! మీరు ఎలా ఉన్నారు?', kn: 'ನಮಸ್ಕಾರ ಗೌಡ ಅವರೇ! ನೀವು ಹೇಗಿದ್ದೀರಿ?', hi: 'नमस्ते गौड़ा जी! आप कैसे हैं?', en: 'Hello Gowda! How are you doing today?', translation: 'Polite greeting and inquiry' },
+      { speaker: 'Gowda', te: 'నమస్కారం వందన గారు! నేను చాలా బాగున్నాను, ధన్యవాదాలు.', kn: 'ನಮಸ್ಕಾರ ವಂದನಾ! ನಾನು ತುಂಬಾ ಚೆನ್ನಾಗಿದ್ದೇನೆ, ಧನ್ಯವಾದಗಳು.', hi: 'नमस्ते वंदना जी! मैं बिल्कुल ठीक हूँ, धन्यवाद।', en: 'Hello Vandana! I am doing very well, thank you.', translation: 'Replying with well-being' },
+      { speaker: 'Vandana', te: 'చాలా రోజుల తర్వాత కలిశాము. ఇంట్లో అందరూ క్షేమమేనా?', kn: 'ತುಂಬಾ ದಿನಗಳ ನಂತರ ಭೇಟಿಯಾದೆವು. ಮನೆಯಲ್ಲಿ ಎಲ್ಲರೂ ಆರಾಮವೇ?', hi: 'काफ़ी दिनों बाद मिले हैं। घर में सब कैसे हैं?', en: 'We are meeting after so long! Is everyone well at home?', translation: 'Asking about family' },
+      { speaker: 'Gowda', te: 'అవును, మీ దయవల్ల ఇంట్లో అందరూ చాలా సంతోషంగా ఉన్నారు.', kn: 'ಹೌದು, ನಿಮ್ಮ ಆಶೀರ್ವಾದದಿಂದ ಮನೆಯಲ್ಲಿ ಎಲ್ಲರೂ ಸಂತೋಷವಾಗಿದ್ದಾರೆ.', hi: 'हाँ, आपकी कृपा से घर पर सब कुशल-मंगल हैं।', en: 'Yes, by grace everyone at home is doing great.', translation: 'Confirming family well-being' },
+      { speaker: 'Vandana', te: 'ఈ రోజు సాయంత్రం మా ఇంటికి కాఫీ తాగడానికి రండి.', kn: 'ಇಂದು ಸಂಜೆ ನಮ್ಮ ಮನೆಗೆ ಕಾಫಿ ಕುಡಿಯಲು ಬನ್ನಿ.', hi: 'आज शाम हमारे घर चाय-कॉफी पीने आइएगा।', en: 'Please come over to our home for coffee this evening.', translation: 'Social invitation' },
+      { speaker: 'Gowda', te: 'తప్పకుండా వస్తాను వందన గారు, ఆహ్వానించినందుకు ధన్యవాదాలు.', kn: 'ಖಂಡಿತ ಬರುತ್ತೇನೆ ವಂದನಾ, ಆಹ್ವಾನಿಸಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು.', hi: 'ज़रूर आऊँगा वंदना जी, निमंत्रण के लिए धन्यवाद।', en: 'I will definitely come Vandana, thank you for inviting me.', translation: 'Accepting with thanks' },
+      { speaker: 'Vandana', te: 'సరే అయితే గౌడ గారు, సాయంత్రం కలుద్దాం. శుభదినం!', kn: 'ಸರಿ ಹಾಗಾದರೆ ಗೌಡ ಅವರೇ, ಸಂಜೆ ಭೇಟಿಯಾಗೋಣ. ಶುಭ ದಿನ!', hi: 'ठीक है फिर गौड़ा जी, शाम को मिलते हैं। शुभ दिन!', en: 'Alright then Gowda, see you in the evening. Have a nice day!', translation: 'Parting words' },
+      { speaker: 'Gowda', te: 'మళ్ళీ కలుద్దాం వందన గారు, జాగ్రత్తగా వెళ్ళిరండి!', kn: 'ಮತ್ತೆ ಸಿಗೋಣ ವಂದನಾ, ಜಾಗ್ರತೆಯಾಗಿ ಹೋಗಿ ಬನ್ನಿ!', hi: 'फिर मिलेंगे वंदना जी, ध्यान से जाइएगा!', en: 'See you again Vandana, take care!', translation: 'Warm farewell' },
     ],
   },
 
@@ -429,10 +429,10 @@ function getTopicDialogue(
     return { vocab: registered.vocab, transcript, characterPair: charPair };
   }
 
-  // Fallback Character Pair (Ravi & Arun)
+  // Fallback Character Pair (Vandana & Gowda)
   const defaultCharPair = {
-    speakerA: { name: 'Ravi', avatar: '👨', role: 'Inquirer', gender: 'male' as const },
-    speakerB: { name: 'Arun', avatar: '🧑', role: 'Friend', gender: 'male' as const },
+    speakerA: { name: 'Vandana', avatar: '👩', role: 'Inquirer', gender: 'female' as const },
+    speakerB: { name: 'Gowda', avatar: '👨', role: 'Friend', gender: 'male' as const },
   };
 
   // Contextual Real-Life Situational Dialogue Generator for all remaining topics!
