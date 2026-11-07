@@ -2,10 +2,20 @@ export type VideoDurationCategory = '2min' | '5min' | '10min' | '15min';
 
 export type VideoProficiencyLevel = 'beginner' | 'elementary' | 'intermediate' | 'fluent';
 
+export interface VideoCharacter {
+  name: string;
+  avatar: string;
+  role: string;
+  gender: 'male' | 'female';
+}
+
 export interface VideoTranscriptLine {
   time: string;
   seconds: number;
   speaker: string;
+  speakerAvatar?: string;
+  speakerRole?: string;
+  speakerIndex?: number; // 0 for Speaker A, 1 for Speaker B
   text: string;
   translation: string;
 }
@@ -35,6 +45,10 @@ export interface VideoLesson {
   topicLabel: string;
   instructor: string;
   instructorAvatar: string;
+  characterPair?: {
+    speakerA: VideoCharacter;
+    speakerB: VideoCharacter;
+  };
   xpReward: number;
   gradient: string;
   embedType: 'native';

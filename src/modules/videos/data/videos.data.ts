@@ -1,4 +1,10 @@
-import { VideoLesson, VideoProficiencyLevel, VideoDurationCategory } from '../types/video.types';
+import {
+  VideoLesson,
+  VideoProficiencyLevel,
+  VideoDurationCategory,
+  VideoTranscriptLine,
+  VideoCharacter,
+} from '../types/video.types';
 
 export interface CategoryDefinition {
   id: number;
@@ -198,6 +204,10 @@ interface DialogueLine {
 }
 
 interface TopicData {
+  characterPair: {
+    speakerA: { name: string; avatar: string; role: string; gender: 'male' | 'female' };
+    speakerB: { name: string; avatar: string; role: string; gender: 'male' | 'female' };
+  };
   vocab: { term: string; phonetic: string; meaning: string }[];
   dialogue: DialogueLine[];
 }
@@ -205,25 +215,33 @@ interface TopicData {
 const TOPIC_DIALOGUE_REGISTRY: Record<string, TopicData> = {
   // 1. Basics - Greetings
   'greetings': {
+    characterPair: {
+      speakerA: { name: 'Ravi', avatar: '👨', role: 'Inquirer', gender: 'male' },
+      speakerB: { name: 'Arun', avatar: '🧑', role: 'Friend', gender: 'male' },
+    },
     vocab: [
       { term: 'నమస్కారం / ನಮಸ್ಕಾರ', phonetic: 'Namaskaram / Namaskara', meaning: 'Hello / Respectful greetings' },
       { term: 'శుభోదయం / ಶುಭೋದಯ', phonetic: 'Shubhodhayam / Shubhodaya', meaning: 'Good morning' },
       { term: 'ధన్యవాదాలు / ಧನ್ಯವಾದಗಳು', phonetic: 'Dhanyavadalu / Dhanyavadagalu', meaning: 'Thank you very much' },
     ],
     dialogue: [
-      { speaker: 'Ravi', te: 'నమస్కారం రమేష్ గారు! మీరు ఎలా ఉన్నారు?', kn: 'ನಮಸ್ಕಾರ ರಮೇಶ್ ಅವರೇ! ನೀವು ಹೇಗಿದ್ದೀರಿ?', hi: 'नमस्ते रमेश जी! आप कैसे हैं?', en: 'Hello Ramesh! How are you doing today?', translation: 'Polite greeting and inquiry' },
-      { speaker: 'Ramesh', te: 'నమస్కారం రవి గారు! నేను చాలా బాగున్నాను, ధన్యవాదాలు.', kn: 'ನಮಸ್ಕಾರ ರವಿ! ನಾನು ತುಂಬಾ ಚೆನ್ನಾಗಿದ್ದೇನೆ, ಧನ್ಯವಾದಗಳು.', hi: 'नमस्ते रवि जी! मैं बिल्कुल ठीक हूँ, धन्यवाद।', en: 'Hello Ravi! I am doing very well, thank you.', translation: 'Replying with well-being' },
+      { speaker: 'Ravi', te: 'నమస్కారం అరుణ్ గారు! మీరు ఎలా ఉన్నారు?', kn: 'ನಮಸ್ಕಾರ ಅರುಣ್ ಅವರೇ! ನೀವು ಹೇಗಿದ್ದೀರಿ?', hi: 'नमस्ते अरुण जी! आप कैसे हैं?', en: 'Hello Arun! How are you doing today?', translation: 'Polite greeting and inquiry' },
+      { speaker: 'Arun', te: 'నమస్కారం రవి గారు! నేను చాలా బాగున్నాను, ధన్యవాదాలు.', kn: 'ನಮಸ್ಕಾರ ರವಿ! ನಾನು ತುಂಬಾ ಚೆನ್ನಾಗಿದ್ದೇನೆ, ಧನ್ಯವಾದಗಳು.', hi: 'नमस्ते रवि जी! मैं बिल्कुल ठीक हूँ, धन्यवाद।', en: 'Hello Ravi! I am doing very well, thank you.', translation: 'Replying with well-being' },
       { speaker: 'Ravi', te: 'చాలా రోజుల తర్వాత కలిశాము. ఇంట్లో అందరూ క్షేమమేనా?', kn: 'ತುಂಬಾ ದಿನಗಳ ನಂತರ ಭೇಟಿಯಾದೆವು. ಮನೆಯಲ್ಲಿ ಎಲ್ಲರೂ ಆರಾಮವೇ?', hi: 'काफ़ी दिनों बाद मिले हैं। घर में सब कैसे हैं?', en: 'We are meeting after so long! Is everyone well at home?', translation: 'Asking about family' },
-      { speaker: 'Ramesh', te: 'అవును, మీ దయవల్ల ఇంట్లో అందరూ చాలా సంతోషంగా ఉన్నారు.', kn: 'ಹೌದು, ನಿಮ್ಮ ಆಶೀರ್ವಾದದಿಂದ ಮನೆಯಲ್ಲಿ ಎಲ್ಲರೂ ಸಂತೋಷವಾಗಿದ್ದಾರೆ.', hi: 'हाँ, आपकी कृपा से घर पर सब कुशल-मंगल हैं।', en: 'Yes, by grace everyone at home is doing great.', translation: 'Confirming family well-being' },
+      { speaker: 'Arun', te: 'అవును, మీ దయవల్ల ఇంట్లో అందరూ చాలా సంతోషంగా ఉన్నారు.', kn: 'ಹೌದು, ನಿಮ್ಮ ಆಶೀರ್ವಾದದಿಂದ ಮನೆಯಲ್ಲಿ ಎಲ್ಲರೂ ಸಂತೋಷವಾಗಿದ್ದಾರೆ.', hi: 'हाँ, आपकी कृपा से घर पर सब कुशल-मंगल हैं।', en: 'Yes, by grace everyone at home is doing great.', translation: 'Confirming family well-being' },
       { speaker: 'Ravi', te: 'ఈ రోజు సాయంత్రం మా ఇంటికి కాఫీ తాగడానికి రండి.', kn: 'ಇಂದು ಸಂಜೆ ನಮ್ಮ ಮನೆಗೆ ಕಾಫಿ ಕುಡಿಯಲು ಬನ್ನಿ.', hi: 'आज शाम हमारे घर चाय-कॉफी पीने आइएगा।', en: 'Please come over to our home for coffee this evening.', translation: 'Social invitation' },
-      { speaker: 'Ramesh', te: 'తప్పకుండా వస్తాను రవి గారు, ఆహ్వానించినందుకు ధన్యవాదాలు.', kn: 'ಖಂಡಿತ ಬರುತ್ತೇನೆ ರವಿ, ಆಹ್ವಾನಿಸಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು.', hi: 'ज़रूर आऊँगा रवि जी, निमंत्रण के लिए धन्यवाद।', en: 'I will definitely come, thank you for inviting me.', translation: 'Accepting with thanks' },
-      { speaker: 'Ravi', te: 'సరే అయితే, సాయంత్రం కలుద్దాం. శుభదినం!', kn: 'ಸರಿ ಹಾಗಾದರೆ, ಸಂಜೆ ಭೇಟಿಯಾಗೋಣ. ಶುಭ ದಿನ!', hi: 'ठीक है फिर, शाम को मिलते हैं। शुभ दिन!', en: 'Alright then, see you in the evening. Have a nice day!', translation: 'Parting words' },
-      { speaker: 'Ramesh', te: 'మళ్ళీ కలుద్దాం రవి గారు, జాగ్రత్తగా వెళ్ళిరండి!', kn: 'ಮತ್ತೆ ಸಿಗೋಣ ರವಿ, ಜಾಗ್ರತೆಯಾಗಿ ಹೋಗಿ ಬನ್ನಿ!', hi: 'फिर मिलेंगे रवि जी, ध्यान से जाइएगा!', en: 'See you again Ravi, take care!', translation: 'Warm farewell' },
+      { speaker: 'Arun', te: 'తప్పకుండా వస్తాను రవి గారు, ఆహ్వానించినందుకు ధన్యవాదాలు.', kn: 'ಖಂಡಿತ ಬರುತ್ತೇನೆ ರವಿ, ಆಹ್ವಾನಿಸಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು.', hi: 'ज़रूर आऊँगा रवि जी, निमंत्रण के लिए धन्यवाद।', en: 'I will definitely come, thank you for inviting me.', translation: 'Accepting with thanks' },
+      { speaker: 'Ravi', te: 'సరే అయితే, సాయంత్రం కలుద్దాಂ. శుభదినం!', kn: 'ಸರಿ ಹಾಗಾದರೆ, ಸಂಜೆ ಭೇಟಿಯಾಗೋಣ. ಶುಭ ದಿನ!', hi: 'ठीक है फिर, शाम को मिलते हैं। शुभ दिन!', en: 'Alright then, see you in the evening. Have a nice day!', translation: 'Parting words' },
+      { speaker: 'Arun', te: 'మళ్ళీ కలుద్దాం రవి గారు, జాగ్రత్తగా వెళ్ళిరండి!', kn: 'ಮತ್ತೆ ಸಿಗೋಣ ರವಿ, ಜಾಗ್ರತೆಯಾಗಿ ಹೋಗಿ ಬನ್ನಿ!', hi: 'फिर मिलेंगे रवि जी, ध्यान से जाइएगा!', en: 'See you again Ravi, take care!', translation: 'Warm farewell' },
     ],
   },
 
   // 1. Basics - Introductions
   'introductions': {
+    characterPair: {
+      speakerA: { name: 'Ananya', avatar: '👩', role: 'Lecturer', gender: 'female' },
+      speakerB: { name: 'Kiran', avatar: '👨', role: 'Engineer', gender: 'male' },
+    },
     vocab: [
       { term: 'నా పేరు / ನನ್ನ ಹೆಸರು', phonetic: 'Naa peru / Nanna hesaru', meaning: 'My name is...' },
       { term: 'ఊరు / ಊರು', phonetic: 'Ooru / Ooru', meaning: 'Hometown / Native place' },
@@ -243,6 +261,10 @@ const TOPIC_DIALOGUE_REGISTRY: Record<string, TopicData> = {
 
   // 6. Food & Dining - Restaurant
   'restaurant': {
+    characterPair: {
+      speakerA: { name: 'Suresh', avatar: '👨', role: 'Customer', gender: 'male' },
+      speakerB: { name: 'Anand', avatar: '🧑‍🍳', role: 'Waiter', gender: 'male' },
+    },
     vocab: [
       { term: 'టేబుల్ / ಟೇಬಲ್', phonetic: 'Table / Table', meaning: 'Dining table' },
       { term: 'మెనూ / ಮೆನು', phonetic: 'Menu / Menu', meaning: 'Food menu' },
@@ -262,6 +284,10 @@ const TOPIC_DIALOGUE_REGISTRY: Record<string, TopicData> = {
 
   // 9. Health - Doctor
   'doctor': {
+    characterPair: {
+      speakerA: { name: 'Priya', avatar: '👩', role: 'Patient', gender: 'female' },
+      speakerB: { name: 'Dr. Sharma', avatar: '👨‍⚕️', role: 'Doctor', gender: 'male' },
+    },
     vocab: [
       { term: 'జ్వరం / ಜ್ವರ', phonetic: 'Jvaram / Jvara', meaning: 'Fever' },
       { term: 'మందులు / ಔಷಧಿ', phonetic: 'Mandulu / Aushadhi', meaning: 'Medicines' },
@@ -281,6 +307,10 @@ const TOPIC_DIALOGUE_REGISTRY: Record<string, TopicData> = {
 
   // 8. Travel - Metro / Bus
   'metro': {
+    characterPair: {
+      speakerA: { name: 'Rohan', avatar: '👨', role: 'Commuter', gender: 'male' },
+      speakerB: { name: 'Officer Rao', avatar: '👮', role: 'Metro Staff', gender: 'male' },
+    },
     vocab: [
       { term: 'మెట్రో కార్డు / ಮೆಟ್ರೋ ಕಾರ್ಡ್', phonetic: 'Metro card / Metro card', meaning: 'Smart travel card' },
       { term: 'ప్లాట్‌ఫాం / ಪ್ಲಾಟ್‌ಫಾರ್ಮ್', phonetic: 'Platform / Platform', meaning: 'Train platform' },
@@ -300,6 +330,10 @@ const TOPIC_DIALOGUE_REGISTRY: Record<string, TopicData> = {
 
   // 10. Banking & Finance - UPI / ATM
   'upi': {
+    characterPair: {
+      speakerA: { name: 'Deepak', avatar: '👨', role: 'Customer', gender: 'male' },
+      speakerB: { name: 'Murthy', avatar: '🧔', role: 'Shopkeeper', gender: 'male' },
+    },
     vocab: [
       { term: 'క్యూఆర్ కోడ్ / ಕ್ಯೂಆರ್ ಕೋಡ್', phonetic: 'QR Code', meaning: 'Scan & Pay code' },
       { term: 'పిన్ నంబర్ / ಪಿನ್ ಸಂಖ್ಯೆ', phonetic: 'PIN Number', meaning: 'Security secret PIN' },
@@ -319,6 +353,10 @@ const TOPIC_DIALOGUE_REGISTRY: Record<string, TopicData> = {
 
   // 5. Office & Workplace - Job Interview
   'job-interview': {
+    characterPair: {
+      speakerA: { name: 'Vikram', avatar: '👨‍💼', role: 'Interviewer', gender: 'male' },
+      speakerB: { name: 'Sneha', avatar: '👩‍💼', role: 'Candidate', gender: 'female' },
+    },
     vocab: [
       { term: 'రెజ్యూమే / ರೆಸ್ಯೂಮೆ', phonetic: 'Resume / CV', meaning: 'Curriculum Vitae' },
       { term: 'అనుభవం / ಅನುಭವ', phonetic: 'Anubhavamu / Anubhava', meaning: 'Work Experience' },
@@ -346,14 +384,22 @@ function getTopicDialogue(
   category: string,
   langCode: string,
   _langName: string
-): { vocab: { term: string; phonetic: string; meaning: string }[]; transcript: { time: string; seconds: number; speaker: string; text: string; translation: string }[] } {
+): {
+  vocab: { term: string; phonetic: string; meaning: string }[];
+  transcript: VideoTranscriptLine[];
+  characterPair: {
+    speakerA: VideoCharacter;
+    speakerB: VideoCharacter;
+  };
+} {
   const normalizedKey = topic.toLowerCase().replace(/\s+/g, '-');
 
   // Check if hand-crafted master dialogue exists
   const registered = TOPIC_DIALOGUE_REGISTRY[normalizedKey];
 
   if (registered) {
-    const transcript = registered.dialogue.map((line, index) => {
+    const charPair = registered.characterPair;
+    const transcript: VideoTranscriptLine[] = registered.dialogue.map((line, index) => {
       const seconds = index * 18 + 5;
       const mins = Math.floor(seconds / 60);
       const secs = seconds % 60;
@@ -365,17 +411,29 @@ function getTopicDialogue(
       else if (langCode === 'hi') spokenText = line.hi;
       else spokenText = line.en;
 
+      const isA = index % 2 === 0;
+      const activeChar = isA ? charPair.speakerA : charPair.speakerB;
+
       return {
         time: timeStr,
         seconds,
-        speaker: line.speaker,
+        speaker: activeChar.name,
+        speakerAvatar: activeChar.avatar,
+        speakerRole: activeChar.role,
+        speakerIndex: (isA ? 0 : 1) as 0 | 1,
         text: spokenText,
         translation: line.translation,
       };
     });
 
-    return { vocab: registered.vocab, transcript };
+    return { vocab: registered.vocab, transcript, characterPair: charPair };
   }
+
+  // Fallback Character Pair (Ravi & Arun)
+  const defaultCharPair = {
+    speakerA: { name: 'Ravi', avatar: '👨', role: 'Inquirer', gender: 'male' as const },
+    speakerB: { name: 'Arun', avatar: '🧑', role: 'Friend', gender: 'male' as const },
+  };
 
   // Contextual Real-Life Situational Dialogue Generator for all remaining topics!
   const vocab = [
@@ -384,55 +442,67 @@ function getTopicDialogue(
     { term: 'Formal Resolution', phonetic: 'Concluding cleanly', meaning: `Concluding your interaction in ${topic}` },
   ];
 
-  let transcript: { time: string; seconds: number; speaker: string; text: string; translation: string }[] = [];
+  let rawLines: { time: string; seconds: number; text: string; translation: string }[] = [];
 
   if (langCode === 'te') {
-    transcript = [
-      { time: '0:05', seconds: 5, speaker: 'Speaker A', text: `నమస్కారం! మనం ఇప్పుడు "${topic}" (${category}) సందర్భంలో మాట్లాడుతున్నాము.`, translation: `Hello! We are discussing "${topic}" in ${category}.` },
-      { time: '0:25', seconds: 25, speaker: 'Speaker B', text: `నమస్కారం! ఈ ${topic} విషయంలో మీ అవసరం ఏమిటో దయచేసి వివరంగా చెప్పండి.`, translation: `Hello! Please tell me what you need regarding ${topic}.` },
-      { time: '0:45', seconds: 45, speaker: 'Speaker A', text: `నాకు ఈ ${topic} గురించి ఖచ్చితమైన సమాచారం మరియు తదుపరి ప్రక్రియ తెలియజేయండి.`, translation: `Please share exact details and next steps for ${topic}.` },
-      { time: '1:05', seconds: 65, speaker: 'Speaker B', text: `తప్పకుండా, దీనికి అవసరమైన అన్ని పత్రాలు మరియు సమయాన్ని నేను పరిశీలిస్తాను.`, translation: `Certainly, I will verify the required details and timeline.` },
-      { time: '1:25', seconds: 85, speaker: 'Speaker A', text: `ఈ ప్రక్రియ పూర్తి కావడానికి ఎంత సమయం పడుతుంది? రుసుము ఎంత చెల్లించాలి?`, translation: `How much time does it take, and what are the fees?` },
-      { time: '1:45', seconds: 105, speaker: 'Speaker B', text: `ఇది చాలా త్వరగానే పూర్తవుతుంది, మీరు చింతించాల్సిన అవసరం లేదు.`, translation: `It will be completed promptly, you do not need to worry.` },
-      { time: '2:05', seconds: 125, speaker: 'Speaker A', text: `చాలా స్పష్టంగా వివరించారు, మీ అమూల్యమైన సహాయానికి ధన్యవాదాలు!`, translation: `Very clearly explained, thank you for your valuable help!` },
-      { time: '2:25', seconds: 145, speaker: 'Speaker B', text: `సంతోషం! మరేదైనా సందేహం ఉంటే సంకోచించకుండా అడగండి. మళ్ళీ కలుద్దాం!`, translation: `Pleasure! Feel free to ask if you have more questions. See you again!` },
+    rawLines = [
+      { time: '0:05', seconds: 5, text: `నమస్కారం! మనం ఇప్పుడు "${topic}" (${category}) సందర్భంలో మాట్లాడుతున్నాము.`, translation: `Hello! We are discussing "${topic}" in ${category}.` },
+      { time: '0:25', seconds: 25, text: `నమస్కారం! ఈ ${topic} విషయంలో మీ అవసరం ఏమిటో దయచేసి వివరంగా చెప్పండి.`, translation: `Hello! Please tell me what you need regarding ${topic}.` },
+      { time: '0:45', seconds: 45, text: `నాకు ఈ ${topic} గురించి ఖచ్చితమైన సమాచారం మరియు తదుపరి ప్రక్రియ తెలియజేయండి.`, translation: `Please share exact details and next steps for ${topic}.` },
+      { time: '1:05', seconds: 65, text: `తప్పకుండా, దీనికి అవసరమైన అన్ని పత్రాలు మరియు సమయాన్ని నేను పరిశీలిస్తాను.`, translation: `Certainly, I will verify the required details and timeline.` },
+      { time: '1:25', seconds: 85, text: `ఈ ప్రక్రియ పూర్తి కావడానికి ఎంత సమయం పడుతుంది? రుసుము ఎంత చెల్లించాలి?`, translation: `How much time does it take, and what are the fees?` },
+      { time: '1:45', seconds: 105, text: `ఇది చాలా త్వరగానే పూర్తవుతుంది, మీరు చింతించాల్సిన అవసరం లేదు.`, translation: `It will be completed promptly, you do not need to worry.` },
+      { time: '2:05', seconds: 125, text: `చాలా స్పష్టంగా వివరించారు, మీ అమూల్యమైన సహాయానికి ధన్యవాదాలు!`, translation: `Very clearly explained, thank you for your valuable help!` },
+      { time: '2:25', seconds: 145, text: `సంతోషం! మరేదైనా సందేహం ఉంటే సంకోచించకుండా అడగండి. మళ్ళీ కలుద్దాం!`, translation: `Pleasure! Feel free to ask if you have more questions. See you again!` },
     ];
   } else if (langCode === 'kn') {
-    transcript = [
-      { time: '0:05', seconds: 5, speaker: 'Speaker A', text: `ನಮಸ್ಕಾರ! ನಾವು ಈಗ "${topic}" (${category}) ಸನ್ನಿವೇಶದಲ್ಲಿ ಸಂಭಾಷಣೆ ನಡೆಸುತ್ತಿದ್ದೇವೆ.`, translation: `Hello! We are having a conversation in the "${topic}" situation.` },
-      { time: '0:25', seconds: 25, speaker: 'Speaker B', text: `ನಮಸ್ಕಾರ! ಈ ${topic} ಕುರಿತು ನಿಮಗೆ ಯಾವ ಸಹಾಯ ಬೇಕು ಎಂಬುದನ್ನು ದಯವಿಟ್ಟು ತಿಳಿಸಿ.`, translation: `Hello! Please let me know what assistance you need in ${topic}.` },
-      { time: '0:45', seconds: 45, speaker: 'Speaker A', text: `ನನಗೆ ಈ ${topic} ಬಗ್ಗೆ ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶನ ಮತ್ತು ವಿವರಗಳು ಬೇಕಾಗಿವೆ.`, translation: `I need complete guidance and information regarding ${topic}.` },
-      { time: '1:05', seconds: 65, speaker: 'Speaker B', text: `ಖಂಡಿತ, ಈ ವಿಷಯಕ್ಕೆ ಸಂಬಂಧಿಸಿದ ಎಲ್ಲಾ ನಿಯಮಗಳನ್ನು ನಾನು ನಿಮಗೆ ವಿವರಿಸುತ್ತೇನೆ.`, translation: `Certainly, I will explain all requirements regarding this topic.` },
-      { time: '1:25', seconds: 85, speaker: 'Speaker A', text: `ಇದಕ್ಕೆ ಎಷ್ಟು ವೆಚ್ಚವಾಗುತ್ತದೆ ಮತ್ತು ಇದು ಯಾವಾಗ ಪೂರ್ಣಗೊಳ್ಳುತ್ತದೆ?`, translation: `How much will it cost and when will it finish?` },
-      { time: '1:45', seconds: 105, speaker: 'Speaker B', text: `ಇದು ಅತಿ ಶೀಘ್ರದಲ್ಲಿ ಸುಲಭವಾಗಿ ಮುಕ್ತಾಯಗೊಳ್ಳುತ್ತದೆ, ನಿಶ್ಚಿಂತರಾಗಿರಿ.`, translation: `It will conclude smoothly and quickly, rest assured.` },
-      { time: '2:05', seconds: 125, speaker: 'Speaker A', text: `ತುಂಬಾ ಉಪಯುಕ್ತ ಮಾಹಿತಿ ನೀಡಿದ್ದೀರಿ, ನಿಮ್ಮ ಸಹಾಯಕ್ಕೆ ಹೃತ್ಪೂರ್ವಕ ಧನ್ಯವಾದಗಳು!`, translation: `Very helpful guidance provided, heartfelt thanks for your help!` },
-      { time: '2:25', seconds: 145, speaker: 'Speaker B', text: `ಸ್ವಾಗತ! ಯಾವುದೇ ಸಂದೇಹವಿದ್ದರೂ ಮತ್ತೆ ಭೇಟಿ ನೀಡಿ. ಶುಭ ದಿನ!`, translation: `You are welcome! Visit again anytime. Have a wonderful day!` },
+    rawLines = [
+      { time: '0:05', seconds: 5, text: `ನಮಸ್ಕಾರ! ನಾವು ಈಗ "${topic}" (${category}) ಸನ್ನಿವೇಶದಲ್ಲಿ ಸಂಭಾಷಣೆ ನಡೆಸುತ್ತಿದ್ದೇವೆ.`, translation: `Hello! We are having a conversation in the "${topic}" situation.` },
+      { time: '0:25', seconds: 25, text: `ನಮಸ್ಕಾರ! ಈ ${topic} ಕುರಿತು ನಿಮಗೆ ಯಾವ ಸಹಾಯ ಬೇಕು ಎಂಬುದನ್ನು ದಯವಿಟ್ಟು ತಿಳಿಸಿ.`, translation: `Hello! Please let me know what assistance you need in ${topic}.` },
+      { time: '0:45', seconds: 45, text: `ನನಗೆ ಈ ${topic} ಬಗ್ಗೆ ಸಂಪೂರ್ಣ ಮಾರ್ಗದರ್ಶನ ಮತ್ತು ವಿವರಗಳು ಬೇಕಾಗಿವೆ.`, translation: `I need complete guidance and information regarding ${topic}.` },
+      { time: '1:05', seconds: 65, text: `ಖಂಡಿತ, ಈ ವಿಷಯಕ್ಕೆ ಸಂಬಂಧಿಸಿದ ಎಲ್ಲಾ ನಿಯಮಗಳನ್ನು ನಾನು ನಿಮಗೆ ವಿವರಿಸುತ್ತೇನೆ.`, translation: `Certainly, I will explain all requirements regarding this topic.` },
+      { time: '1:25', seconds: 85, text: `ಇದಕ್ಕೆ ಎಷ್ಟು ವೆಚ್ಚವಾಗುತ್ತದೆ ಮತ್ತು ಇದು ಯಾವಾಗ ಪೂರ್ಣಗೊಳ್ಳುತ್ತದೆ?`, translation: `How much will it cost and when will it finish?` },
+      { time: '1:45', seconds: 105, text: `ಇದು ಅತಿ ಶೀಘ್ರದಲ್ಲಿ ಸುಲಭವಾಗಿ ಮುಕ್ತಾಯಗೊಳ್ಳುತ್ತದೆ, ನಿಶ್ಚಿಂತರಾಗಿರಿ.`, translation: `It will conclude smoothly and quickly, rest assured.` },
+      { time: '2:05', seconds: 125, text: `ತುಂಬಾ ಉಪಯುಕ್ತ ಮಾಹಿತಿ ನೀಡಿದ್ದೀರಿ, ನಿಮ್ಮ ಸಹಾಯಕ್ಕೆ ಹೃತ್ಪೂರ್ವಕ ಧನ್ಯವಾದಗಳು!`, translation: `Very helpful guidance provided, heartfelt thanks for your help!` },
+      { time: '2:25', seconds: 145, text: `ಸ್ವಾಗತ! ಯಾವುದೇ ಸಂದೇಹವಿದ್ದರೂ ಮತ್ತೆ ಭೇಟಿ ನೀಡಿ. ಶುಭ ದಿನ!`, translation: `You are welcome! Visit again anytime. Have a wonderful day!` },
     ];
   } else if (langCode === 'hi') {
-    transcript = [
-      { time: '0:05', seconds: 5, speaker: 'Speaker A', text: `नमस्ते! हम अभी "${topic}" (${category}) के वास्तविक संदर्भ में बातचीत कर रहे हैं।`, translation: `Hello! We are engaging in a real-life conversation on "${topic}".` },
-      { time: '0:25', seconds: 25, speaker: 'Speaker B', text: `नमस्ते! इस ${topic} के संबंध में मैं आपकी किस प्रकार सहायता कर सकता हूँ?`, translation: `Hello! How may I assist you regarding this ${topic}?` },
-      { time: '0:45', seconds: 45, speaker: 'Speaker A', text: `कृपया मुझे इस ${topic} की आवश्यक जानकारी और मुख्य प्रक्रिया समझाइए।`, translation: `Please explain the key requirements and procedure for ${topic}.` },
-      { time: '1:05', seconds: 65, speaker: 'Speaker B', text: `बिल्कुल, मैं आपको इसके सभी नियम और विवरण विस्तार से बताता हूँ।`, translation: `Certainly, I will explain all regulations and details in depth.` },
-      { time: '1:25', seconds: 85, speaker: 'Speaker A', text: `इसमें कितना समय और क्या औपचारिकताएँ होंगी?`, translation: `How much time will this take and what are the formalities?` },
-      { time: '1:45', seconds: 105, speaker: 'Speaker B', text: `यह कार्य बहुत आसानी से और समय पर पूरा हो जाएगा, आप निश्चिंत रहें।`, translation: `This task will be completed promptly and smoothly, be assured.` },
-      { time: '2:05', seconds: 125, speaker: 'Speaker A', text: `बहुत अच्छी तरह समझाया आपने, आपकी सहायता के लिए बहुत-बहुत धन्यवाद!`, translation: `Very well explained, thank you very much for your kind support!` },
-      { time: '2:25', seconds: 145, speaker: 'Speaker B', text: `आपका स्वागत है! कोई भी अन्य प्रश्न हो तो अवश्य पूछें। फिर मिलेंगे!`, translation: `You are welcome! Feel free to ask if anything else arises. See you soon!` },
+    rawLines = [
+      { time: '0:05', seconds: 5, text: `नमस्ते! हम अभी "${topic}" (${category}) के वास्तविक संदर्भ में बातचीत कर रहे हैं।`, translation: `Hello! We are engaging in a real-life conversation on "${topic}".` },
+      { time: '0:25', seconds: 25, text: `नमस्ते! इस ${topic} के संबंध में मैं आपकी किस प्रकार सहायता कर सकता हूँ?`, translation: `Hello! How may I assist you regarding this ${topic}?` },
+      { time: '0:45', seconds: 45, text: `कृपया मुझे इस ${topic} की आवश्यक जानकारी और मुख्य प्रक्रिया समझाइए।`, translation: `Please explain the key requirements and procedure for ${topic}.` },
+      { time: '1:05', seconds: 65, text: `बिल्कुल, मैं आपको इसके सभी नियम और विवरण विस्तार से बताता हूँ।`, translation: `Certainly, I will explain all regulations and details in depth.` },
+      { time: '1:25', seconds: 85, text: `इसमें कितना समय और क्या औपचारिकताएँ होंगी?`, translation: `How much time will this take and what are the formalities?` },
+      { time: '1:45', seconds: 105, text: `यह कार्य बहुत आसानी से और समय पर पूरा हो जाएगा, आप निश्चिंत रहें।`, translation: `This task will be completed promptly and smoothly, be assured.` },
+      { time: '2:05', seconds: 125, text: `बहुत अच्छी तरह समझाया आपने, आपकी सहायता के लिए बहुत-बहुत धन्यवाद!`, translation: `Very well explained, thank you very much for your kind support!` },
+      { time: '2:25', seconds: 145, text: `आपका स्वागत है! कोई भी अन्य प्रश्न हो तो अवश्य पूछें। फिर मिलेंगे!`, translation: `You are welcome! Feel free to ask if anything else arises. See you soon!` },
     ];
   } else {
-    transcript = [
-      { time: '0:05', seconds: 5, speaker: 'Speaker A', text: `Hello! Today we are practicing an authentic conversation on "${topic}" in ${category}.`, translation: `Authentic conversation on "${topic}".` },
-      { time: '0:25', seconds: 25, speaker: 'Speaker B', text: `Hello! Please tell me what specific assistance or details you need regarding ${topic}.`, translation: `Inquiring about ${topic} needs.` },
-      { time: '0:45', seconds: 45, speaker: 'Speaker A', text: `I would like clear guidance on the key requirements and procedures for ${topic}.`, translation: `Stating specific request on ${topic}.` },
-      { time: '1:05', seconds: 65, speaker: 'Speaker B', text: `Certainly, let me guide you through the exact steps and guidelines for ${topic}.`, translation: `Explaining procedures.` },
-      { time: '1:25', seconds: 85, speaker: 'Speaker A', text: `How much time and what documentation is required to complete this successfully?`, translation: `Checking duration and requirements.` },
-      { time: '1:45', seconds: 105, speaker: 'Speaker B', text: `It will be processed promptly and smoothly, you can proceed with confidence.`, translation: `Reassuring and confirming.` },
-      { time: '2:05', seconds: 125, speaker: 'Speaker A', text: `Thank you very much for explaining everything so clearly and professionally!`, translation: `Expressing gratitude.` },
-      { time: '2:25', seconds: 145, speaker: 'Speaker B', text: `You are very welcome! Feel free to ask if you need anything else. Have a great day!`, translation: `Warm conclusion.` },
+    rawLines = [
+      { time: '0:05', seconds: 5, text: `Hello! Today we are practicing an authentic conversation on "${topic}" in ${category}.`, translation: `Authentic conversation on "${topic}".` },
+      { time: '0:25', seconds: 25, text: `Hello! Please tell me what specific assistance or details you need regarding ${topic}.`, translation: `Inquiring about ${topic} needs.` },
+      { time: '0:45', seconds: 45, text: `I would like clear guidance on the key requirements and procedures for ${topic}.`, translation: `Stating specific request on ${topic}.` },
+      { time: '1:05', seconds: 65, text: `Certainly, let me guide you through the exact steps and guidelines for ${topic}.`, translation: `Explaining procedures.` },
+      { time: '1:25', seconds: 85, text: `How much time and what documentation is required to complete this successfully?`, translation: `Checking duration and requirements.` },
+      { time: '1:45', seconds: 105, text: `It will be processed promptly and smoothly, you can proceed with confidence.`, translation: `Reassuring and confirming.` },
+      { time: '2:05', seconds: 125, text: `Thank you very much for explaining everything so clearly and professionally!`, translation: `Expressing gratitude.` },
+      { time: '2:25', seconds: 145, text: `You are very welcome! Feel free to ask if you need anything else. Have a great day!`, translation: `Warm conclusion.` },
     ];
   }
 
-  return { vocab, transcript };
+  const transcript: VideoTranscriptLine[] = rawLines.map((line, index) => {
+    const isA = index % 2 === 0;
+    const activeChar = isA ? defaultCharPair.speakerA : defaultCharPair.speakerB;
+    return {
+      ...line,
+      speaker: activeChar.name,
+      speakerAvatar: activeChar.avatar,
+      speakerRole: activeChar.role,
+      speakerIndex: (isA ? 0 : 1) as 0 | 1,
+    };
+  });
+
+  return { vocab, transcript, characterPair: defaultCharPair };
 }
 
 // Generate the complete real-life masterclass database
@@ -484,6 +554,7 @@ for (const lang of SUPPORTED_LANGUAGES_META) {
         topicLabel: topic,
         instructor: lang.instructor,
         instructorAvatar: lang.avatar,
+        characterPair: topicData.characterPair,
         xpReward: xp,
         gradient: lang.gradient,
         embedType: 'native',

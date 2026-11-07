@@ -128,6 +128,11 @@ export const VideosPage: React.FC = () => {
 
     const playSentenceStep = async () => {
       if (!isMuted && currentSentence) {
+        // Speaker alternation: 0 for Speaker A (Ravi), 1 for Speaker B (Arun)
+        const speakerIndex = currentSentence.speakerIndex ?? (activeSentenceIndex % 2 === 0 ? 0 : 1);
+        // Two distinct voice tones: 0.85 (deep, warm tone) vs 1.25 (bright, expressive tone)
+        const pitch = speakerIndex === 0 ? 0.85 : 1.25;
+
         // Use SpeechSynthesis with safety watchdog timer so mobile browsers NEVER stall
         await new Promise<void>((resolve) => {
           let finished = false;
@@ -141,7 +146,7 @@ export const VideosPage: React.FC = () => {
           // Watchdog timer: if browser voice hangs or fails, keep video rolling smoothly
           const watchdog = setTimeout(complete, estimatedDurationMs + 1200);
 
-          SpeechService.speak(currentSentence.text, speechCode, playbackRate)
+          SpeechService.speak(currentSentence.text, speechCode, playbackRate, pitch, speakerIndex)
             .then(() => {
               clearTimeout(watchdog);
               complete();
@@ -287,6 +292,16 @@ export const VideosPage: React.FC = () => {
     Math.round(((activeSentenceIndex + 1) / totalSentences) * 100)
   );
 
+  const characterPair = activeLesson.characterPair || {
+    speakerA: { name: 'Ravi', avatar: '👨', role: 'Inquirer', gender: 'male' },
+    speakerB: { name: 'Arun', avatar: '🧑', role: 'Friend', gender: 'male' },
+  };
+
+  const activeSpeakerIndex =
+    currentSentence?.speakerIndex ?? (activeSentenceIndex % 2 === 0 ? 0 : 1);
+  const activeSpeaker =
+    activeSpeakerIndex === 0 ? characterPair.speakerA : characterPair.speakerB;
+
   return (
     <div className="space-y-5 animate-fadeIn pb-14">
       <ModuleHeader
@@ -349,11 +364,24 @@ export const VideosPage: React.FC = () => {
                 </span>
               </div>
 
-              <div className="bg-black/50 backdrop-blur-md p-2.5 rounded-xl text-xs z-10">
-                <span className="font-bold block truncate">{activeLesson.title}</span>
-                <span className="text-[10px] text-white/80 block truncate">
-                  {activeLesson.instructorAvatar} {activeLesson.instructor} • {activeLesson.topicLabel}
-                </span>
+              <div className="bg-black/60 backdrop-blur-md p-2.5 rounded-xl text-xs z-10 flex items-center justify-between">
+                <div className="min-w-0 pr-2">
+                  <span className="font-bold block truncate">{activeLesson.title}</span>
+                  <span className="text-[10px] text-white/80 block truncate">
+                    {activeLesson.topicLabel} • 2-Character Real-Life Dialogue
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0 bg-white/10 px-2 py-1 rounded-lg border border-white/15">
+                  <span className="text-xs font-bold flex items-center gap-1">
+                    <span>{characterPair.speakerA.avatar}</span>
+                    <span>{characterPair.speakerA.name}</span>
+                  </span>
+                  <span className="text-[10px] text-amber-300 font-extrabold">&</span>
+                  <span className="text-xs font-bold flex items-center gap-1">
+                    <span>{characterPair.speakerB.avatar}</span>
+                    <span>{characterPair.speakerB.name}</span>
+                  </span>
+                </div>
               </div>
             </div>
           ) : (
@@ -389,49 +417,131 @@ export const VideosPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Center Flowing Presentation Stage */}
-              <div className="my-auto text-center space-y-2 z-10 px-2">
-                <div className="flex items-center justify-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-2xl shadow-lg animate-pulse">
-                    {activeLesson.instructorAvatar}
+              {/* Center Flowing Presentation Stage - Dual-Character Stage */}
+              <div className="my-auto text-center space-y-2 z-10 px-1">
+                {/* Dual Characters Conversation Duo */}
+                <div className="flex items-center justify-between gap-1 max-w-sm mx-auto px-1 py-1">
+                  {/* Speaker A (e.g. Ravi) */}
+                  <div
+                    className={`flex items-center gap-1.5 p-1.5 rounded-xl transition-all duration-300 ${
+                      activeSpeakerIndex === 0
+                        ? 'bg-blue-600/50 border border-blue-400 ring-2 ring-blue-400/60 shadow-lg scale-105'
+                        : 'opacity-55 bg-black/40 border border-white/10 scale-95'
+                    }`}
+                  >
+                    <div className="relative">
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-xl shadow-md ${
+                          activeSpeakerIndex === 0 ? 'bg-blue-500 animate-pulse' : 'bg-slate-700'
+                        }`}
+                      >
+                        {characterPair.speakerA.avatar}
+                      </div>
+                      {activeSpeakerIndex === 0 && (
+                        <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full animate-ping" />
+                      )}
+                    </div>
+                    <div className="text-left leading-tight">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] font-black text-white">{characterPair.speakerA.name}</span>
+                        {activeSpeakerIndex === 0 && (
+                          <span className="text-[7px] bg-blue-500 text-white font-extrabold px-1 py-0.2 rounded uppercase">
+                            Speaking
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[9px] text-white/70 block truncate max-w-[70px]">
+                        {characterPair.speakerA.role}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <span className="text-[11px] font-bold text-white block">
-                      {activeLesson.instructor}
+
+                  {/* Center Voice Wave & Turn Indicator */}
+                  <div className="flex flex-col items-center justify-center px-1">
+                    <div className="flex items-center gap-0.5 h-3">
+                      {[40, 80, 50, 90, 60].map((h, i) => (
+                        <span
+                          key={i}
+                          className={`w-0.5 rounded-full ${
+                            activeSpeakerIndex === 0 ? 'bg-blue-400' : 'bg-emerald-400'
+                          } animate-bounce`}
+                          style={{
+                            height: `${h}%`,
+                            animationDelay: `${i * 90}ms`,
+                            animationDuration: '600ms',
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-[8px] font-extrabold text-amber-300 uppercase tracking-wider mt-0.5">
+                      Turn {activeSentenceIndex + 1}/{totalSentences}
                     </span>
-                    <span className="text-[9px] text-white/70 block">
-                      {activeLesson.topicLabel} • Sentence {activeSentenceIndex + 1} of {totalSentences}
-                    </span>
+                  </div>
+
+                  {/* Speaker B (e.g. Arun) */}
+                  <div
+                    className={`flex items-center gap-1.5 p-1.5 rounded-xl transition-all duration-300 ${
+                      activeSpeakerIndex === 1
+                        ? 'bg-emerald-600/50 border border-emerald-400 ring-2 ring-emerald-400/60 shadow-lg scale-105'
+                        : 'opacity-55 bg-black/40 border border-white/10 scale-95'
+                    }`}
+                  >
+                    <div className="text-right leading-tight">
+                      <div className="flex items-center justify-end gap-1">
+                        {activeSpeakerIndex === 1 && (
+                          <span className="text-[7px] bg-emerald-500 text-white font-extrabold px-1 py-0.2 rounded uppercase">
+                            Replying
+                          </span>
+                        )}
+                        <span className="text-[11px] font-black text-white">{characterPair.speakerB.name}</span>
+                      </div>
+                      <span className="text-[9px] text-white/70 block truncate max-w-[70px]">
+                        {characterPair.speakerB.role}
+                      </span>
+                    </div>
+                    <div className="relative">
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-xl shadow-md ${
+                          activeSpeakerIndex === 1 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-700'
+                        }`}
+                      >
+                        {characterPair.speakerB.avatar}
+                      </div>
+                      {activeSpeakerIndex === 1 && (
+                        <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full animate-ping" />
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Main Active Lesson Slide (Moves dynamically to next sentence) */}
-                <div className="p-3.5 rounded-2xl bg-black/60 backdrop-blur-md border border-white/20 max-w-sm mx-auto shadow-2xl space-y-1.5 transition-all duration-300">
-                  <div className="text-[10px] text-blue-300 font-bold uppercase tracking-wider flex items-center justify-center gap-1">
-                    <Sparkles className="w-3 h-3 text-amber-400" />
-                    <span>Current Focus Sentence</span>
+                {/* Main Active Lesson Slide with Prominent Speaker Tag */}
+                <div className="p-3.5 rounded-2xl bg-black/75 backdrop-blur-md border border-white/20 max-w-sm mx-auto shadow-2xl space-y-2 transition-all duration-300">
+                  {/* Active Speaker Banner */}
+                  <div className="flex items-center justify-between pb-1 border-b border-white/15">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-sm">{activeSpeaker.avatar}</span>
+                      <span className="text-xs font-black tracking-wide text-white">
+                        {activeSpeaker.name}
+                      </span>
+                      <span
+                        className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded-full ${
+                          activeSpeakerIndex === 0 ? 'bg-blue-500 text-white' : 'bg-emerald-500 text-white'
+                        }`}
+                      >
+                        {activeSpeakerIndex === 0 ? 'Speaking / Voice 1' : 'Replying / Voice 2'}
+                      </span>
+                    </div>
+                    <span className="text-[9px] font-mono text-white/70 bg-white/10 px-1.5 py-0.5 rounded">
+                      {activeSpeaker.role}
+                    </span>
                   </div>
-                  <p className="text-sm md:text-base font-bold text-white drop-shadow leading-snug">
+
+                  <p className="text-sm md:text-base font-bold text-white drop-shadow leading-snug pt-0.5">
                     {currentSentence?.text}
                   </p>
                   <p className="text-xs text-white/80 italic">
                     "{currentSentence?.translation}"
                   </p>
-                </div>
-
-                {/* Animated Equalizer Waveform */}
-                <div className="flex items-center justify-center gap-1 h-3 pt-0.5">
-                  {[40, 75, 100, 60, 90, 45, 80, 65, 95, 50, 70].map((h, i) => (
-                    <span
-                      key={i}
-                      className="w-1 bg-white/70 rounded-full animate-bounce"
-                      style={{
-                        height: `${h}%`,
-                        animationDelay: `${i * 90}ms`,
-                        animationDuration: '700ms',
-                      }}
-                    />
-                  ))}
                 </div>
               </div>
 
@@ -548,52 +658,93 @@ export const VideosPage: React.FC = () => {
         </div>
       </Card>
 
-      {/* Interactive Flowing Transcript (Highlights & auto-scrolls with audio) */}
+      {/* Interactive Flowing 2-Way Dialogue Transcript */}
       <Card className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-            <span>Interactive Flowing Transcript ({totalSentences} Sentences)</span>
+            <span>2-Character Dialogue Transcript ({totalSentences} Turns)</span>
           </h3>
-          <span className="text-[10px] text-slate-400">Tap line to seek</span>
+          <span className="text-[10px] text-slate-400">Tap line to seek & listen</span>
         </div>
 
-        <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+        <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
           {activeLesson.transcript.map((line, idx) => {
             const isLineActive = activeSentenceIndex === idx;
+            const lineSpeakerIndex = line.speakerIndex ?? (idx % 2 === 0 ? 0 : 1);
+            const isSpeakerA = lineSpeakerIndex === 0;
+            const speakerChar = isSpeakerA ? characterPair.speakerA : characterPair.speakerB;
 
             return (
               <button
                 key={idx}
                 id={`transcript-item-${idx}`}
                 onClick={() => handleSeekSentence(idx)}
-                className={`w-full text-left p-2.5 rounded-xl border transition group flex items-start gap-2.5 ${
+                className={`w-full text-left p-3 rounded-2xl border transition group flex items-start gap-2.5 ${
                   isLineActive
-                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-950/60 shadow-xs ring-1 ring-blue-500/30'
-                    : 'bg-slate-50 dark:bg-slate-800/60 hover:bg-blue-50/60 dark:hover:bg-blue-950/40 border-slate-200/60 dark:border-slate-800'
+                    ? isSpeakerA
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/70 shadow-md ring-2 ring-blue-500/40'
+                      : 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/70 shadow-md ring-2 ring-emerald-500/40'
+                    : 'bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200/60 dark:border-slate-800'
                 }`}
               >
-                <span
-                  className={`px-1.5 py-0.5 rounded font-mono text-[10px] font-bold shrink-0 mt-0.5 transition ${
-                    isLineActive
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white'
-                  }`}
-                >
-                  {line.time || `0:${idx * 15 < 10 ? '0' : ''}${idx * 15}`}
-                </span>
-                <div className="space-y-0.5 min-w-0">
+                {/* Avatar and Timestamp */}
+                <div className="flex flex-col items-center gap-1 shrink-0">
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center text-base shadow-xs ${
+                      isSpeakerA
+                        ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-700'
+                        : 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700'
+                    }`}
+                  >
+                    {line.speakerAvatar || speakerChar.avatar}
+                  </div>
+                  <span
+                    className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-bold ${
+                      isLineActive
+                        ? isSpeakerA ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white'
+                        : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                    }`}
+                  >
+                    {line.time || `0:${idx * 15 < 10 ? '0' : ''}${idx * 15}`}
+                  </span>
+                </div>
+
+                {/* Dialogue Text & Speaker Tag */}
+                <div className="space-y-1 min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                        isSpeakerA
+                          ? 'bg-blue-100 dark:bg-blue-900/80 text-blue-700 dark:text-blue-300'
+                          : 'bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300'
+                      }`}
+                    >
+                      {line.speaker || speakerChar.name}
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      {isSpeakerA ? 'Asking / Initiating' : 'Replying'}
+                    </span>
+                    {isLineActive && (
+                      <span className="ml-auto text-[9px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 animate-pulse">
+                        <Volume2 className="w-3 h-3" />
+                        Speaking Now
+                      </span>
+                    )}
+                  </div>
+
                   <span
                     className={`text-xs block ${
                       isLineActive
-                        ? 'font-bold text-blue-700 dark:text-blue-300'
-                        : 'font-semibold text-slate-900 dark:text-slate-100'
+                        ? 'font-bold text-slate-900 dark:text-slate-100'
+                        : 'font-medium text-slate-800 dark:text-slate-200'
                     }`}
                   >
                     {line.text}
                   </span>
-                  <span className="text-[11px] text-slate-500 block truncate">
-                    {line.translation}
+
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block italic">
+                    "{line.translation}"
                   </span>
                 </div>
               </button>
