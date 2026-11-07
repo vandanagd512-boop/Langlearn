@@ -8,7 +8,6 @@ import {
   Play,
   Pause,
   Clock,
-  Sparkles,
   Volume2,
   VolumeX,
   CheckCircle2,
@@ -278,16 +277,6 @@ export const VideosPage: React.FC = () => {
       SpeechService.stop();
     }
     setIsPlaying(!isPlaying);
-  };
-
-  const handleSeekSentence = (idx: number) => {
-    SpeechService.stop();
-    setActiveSentenceIndex(idx);
-    setIsPlaying(true);
-    notify({
-      type: 'info',
-      message: `Jumped to sentence ${idx + 1} of ${totalSentences}`,
-    });
   };
 
   const handleNextSentence = () => {
@@ -884,106 +873,6 @@ export const VideosPage: React.FC = () => {
               {isCompleted ? 'Completed ✓' : 'Mark as Watched'}
             </Button>
           </div>
-        </div>
-      </Card>
-
-      {/* Interactive Flowing 2-Way Dialogue Transcript */}
-      <Card className="p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-            <span>Interactive Dialogue Timeline ({characterPair.speakerA.name} & {characterPair.speakerB.name} • {totalSentences} Turns)</span>
-          </h3>
-          <span className="text-[10px] text-slate-400">Tap line to seek & listen</span>
-        </div>
-
-        <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-          {activeLesson.transcript.map((line, idx) => {
-            const isLineActive = activeSentenceIndex === idx;
-            const lineSpeakerIndex = line.speakerIndex ?? (idx % 2 === 0 ? 0 : 1);
-            const isSpeakerA = lineSpeakerIndex === 0;
-            const speakerChar = isSpeakerA ? characterPair.speakerA : characterPair.speakerB;
-            const displayName = line.speaker === 'Ravi'
-              ? characterPair.speakerA.name
-              : line.speaker === 'Arun'
-              ? characterPair.speakerB.name
-              : (line.speaker || speakerChar.name);
-
-            return (
-              <button
-                key={idx}
-                id={`transcript-item-${idx}`}
-                onClick={() => handleSeekSentence(idx)}
-                className={`w-full text-left p-3 rounded-2xl border transition group flex items-start gap-2.5 ${
-                  isLineActive
-                    ? isSpeakerA
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/70 shadow-md ring-2 ring-blue-500/40'
-                      : 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/70 shadow-md ring-2 ring-emerald-500/40'
-                    : 'bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200/60 dark:border-slate-800'
-                }`}
-              >
-                {/* Avatar and Timestamp */}
-                <div className="flex flex-col items-center gap-1 shrink-0">
-                  <div
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center text-base shadow-xs ${
-                      isSpeakerA
-                        ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-700'
-                        : 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700'
-                    }`}
-                  >
-                    {isSpeakerA ? characterPair.speakerA.avatar : characterPair.speakerB.avatar}
-                  </div>
-                  <span
-                    className={`px-1.5 py-0.5 rounded font-mono text-[9px] font-bold ${
-                      isLineActive
-                        ? isSpeakerA ? 'bg-blue-600 text-white' : 'bg-emerald-600 text-white'
-                        : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                    }`}
-                  >
-                    {line.time || `0:${idx * 15 < 10 ? '0' : ''}${idx * 15}`}
-                  </span>
-                </div>
-
-                {/* Dialogue Text & Speaker Tag */}
-                <div className="space-y-1 min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
-                        isSpeakerA
-                          ? 'bg-blue-100 dark:bg-blue-900/80 text-blue-700 dark:text-blue-300'
-                          : 'bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300'
-                      }`}
-                    >
-                      {displayName}
-                    </span>
-                    <span className="text-[10px] text-slate-400">
-                      {isSpeakerA ? 'Asking / Initiating' : 'Replying'}
-                    </span>
-                    {isLineActive && (
-                      <span className="ml-auto text-[9px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 animate-pulse">
-                        <Volume2 className="w-3 h-3" />
-                        Speaking Now
-                      </span>
-                    )}
-                  </div>
-
-                  <span
-                    className={`text-xs block ${
-                      isLineActive
-                        ? 'font-bold text-slate-900 dark:text-slate-100'
-                        : 'font-medium text-slate-800 dark:text-slate-200'
-                    }`}
-                  >
-                    {line.text}
-                  </span>
-
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block italic">
-                    "{line.translation}"
-                  </span>
-                </div>
-              </button>
-            );
-          })}
         </div>
       </Card>
 
