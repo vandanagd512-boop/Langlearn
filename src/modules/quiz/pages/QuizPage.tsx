@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { SpeechService } from '@/services/speech/speech.service';
+import { LearningAnalyticsService } from '@/services/analytics/learning-analytics.service';
 import { SUPPORTED_LANGUAGES } from '@/config/constants';
 import {
   HelpCircle,
@@ -352,13 +353,25 @@ export const QuizPage: React.FC = () => {
       setSelectedOption(null);
       setIsSubmitted(false);
     } else {
+      const finalScore = score + (selectedOption === currentQ.correctIndex ? 1 : 0);
+      const scorePct = Math.round((finalScore / questions.length) * 100);
       setQuizFinished(true);
+
+      // Record real quiz analytics activity
+      LearningAnalyticsService.recordActivity({
+        type: 'quiz',
+        title: `${courseParam.toUpperCase()} Knowledge Evaluation`,
+        durationSeconds: 120,
+        xpEarned: finalScore * 15,
+        accuracyScore: scorePct,
+        wordsCount: questions.length,
+        languageCode: courseParam,
+      });
+
       notify({
         type: 'success',
         title: '🎉 Quiz Completed!',
-        message: `You scored ${score + (selectedOption === currentQ.correctIndex ? 1 : 0)} of ${
-          questions.length
-        }!`,
+        message: `You scored ${finalScore} of ${questions.length}!`,
       });
     }
   };

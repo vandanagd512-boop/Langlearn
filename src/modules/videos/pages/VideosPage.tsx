@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ModuleHeader } from '@/components/layout/ModuleHeader';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -31,6 +31,7 @@ import { CertificateModal } from '@/components/certificate/CertificateModal';
 import { useNotification } from '@/context/NotificationContext';
 import { useAppStore } from '@/state/store';
 import { StorageService } from '@/utils/storage';
+import { LearningAnalyticsService } from '@/services/analytics/learning-analytics.service';
 import { SUPPORTED_LANGUAGES } from '@/config/constants';
 
 export const VideosPage: React.FC = () => {
@@ -51,6 +52,7 @@ export const VideosPage: React.FC = () => {
   const [isPracticingTurn, setIsPracticingTurn] = useState<boolean>(false);
   const [turnScoreResult, setTurnScoreResult] = useState<PronunciationScoreResult | null>(null);
   const [showCertificateModal, setShowCertificateModal] = useState<boolean>(false);
+  const sessionTimerRef = useRef<number>(Date.now());
 
   // Lessons list filtered by active language
   const languageLessons = useMemo(() => {
@@ -216,6 +218,19 @@ export const VideosPage: React.FC = () => {
       StorageService.setItem('completed_video_lessons', updatedCompleted);
     }
 
+    // Record real analytics activity
+    const elapsedSeconds = Math.max(30, Math.round((Date.now() - sessionTimerRef.current) / 1000));
+    LearningAnalyticsService.recordActivity({
+      type: 'video',
+      title: activeLesson.title,
+      durationSeconds: elapsedSeconds,
+      xpEarned: activeLesson.xpReward,
+      wordsCount: activeLesson.keyVocabulary.length,
+      accuracyScore: turnScoreResult?.score,
+      languageCode: activeLesson.languageCode,
+    });
+    sessionTimerRef.current = Date.now();
+
     const newLangCount = languageLessons.filter((v) => updatedCompleted.includes(v.id)).length;
     const isNowAllDone = languageLessons.length > 0 && newLangCount >= languageLessons.length;
 
@@ -344,6 +359,16 @@ export const VideosPage: React.FC = () => {
         if (spoken && currentSentence) {
           const result = PronunciationService.computeAccuracy(spoken, currentSentence.text);
           setTurnScoreResult(result);
+          // Log speaking practice activity in real-time
+          LearningAnalyticsService.recordActivity({
+            type: 'speaking',
+            title: `Speaking Practice: "${currentSentence.text.slice(0, 24)}..."`,
+            durationSeconds: 15,
+            xpEarned: Math.max(5, Math.round(result.score / 5)),
+            accuracyScore: result.score,
+            wordsCount: 1,
+            languageCode: activeLesson.languageCode,
+          });
           if (result.score >= 80) {
             notify({
               type: 'success',
@@ -386,6 +411,19 @@ export const VideosPage: React.FC = () => {
       setCompletedVideos(updatedCompleted);
       StorageService.setItem('completed_video_lessons', updatedCompleted);
     }
+
+    // Record real analytics activity
+    const elapsedSeconds = Math.max(30, Math.round((Date.now() - sessionTimerRef.current) / 1000));
+    LearningAnalyticsService.recordActivity({
+      type: 'video',
+      title: activeLesson.title,
+      durationSeconds: elapsedSeconds,
+      xpEarned: activeLesson.xpReward,
+      wordsCount: activeLesson.keyVocabulary.length,
+      accuracyScore: turnScoreResult?.score,
+      languageCode: activeLesson.languageCode,
+    });
+    sessionTimerRef.current = Date.now();
 
     const newLangCount = languageLessons.filter((v) => updatedCompleted.includes(v.id)).length;
     const isNowAllDone = languageLessons.length > 0 && newLangCount >= languageLessons.length;

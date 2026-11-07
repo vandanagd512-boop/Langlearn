@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/state/store';
 import { useNotification } from '@/context/NotificationContext';
 import { StorageService } from '@/utils/storage';
+import { LearningAnalyticsService } from '@/services/analytics/learning-analytics.service';
 import { ModuleHeader } from '@/components/layout/ModuleHeader';
 import { Button } from '@/components/ui/Button';
 
@@ -194,12 +195,22 @@ export const VocabularyPage: React.FC = () => {
       return updated;
     });
 
+    // Record real vocabulary practice analytics
+    LearningAnalyticsService.recordActivity({
+      type: 'vocabulary',
+      title: `Practiced Word: "${dailyWord.word}"`,
+      durationSeconds: 45,
+      xpEarned: 15,
+      wordsCount: 1,
+      languageCode: effectiveLangCode,
+    });
+
     notify({
       type: 'success',
       title: 'Word of the Day Practiced!',
       message: `You earned +15 XP for practicing "${dailyWord.word}" today. Keep up the streak!`,
     });
-  }, [dailyWord.id, dailyWord.word, notify]);
+  }, [dailyWord.id, dailyWord.word, effectiveLangCode, notify]);
 
   // Filtered vocabulary list with smart relaxation to avoid empty states
   const filteredWords = useMemo(() => {

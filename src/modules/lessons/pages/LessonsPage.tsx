@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/state/store';
 import { useNotification } from '@/context/NotificationContext';
 import { StorageService } from '@/utils/storage';
+import { LearningAnalyticsService } from '@/services/analytics/learning-analytics.service';
 
 import { getLessonDetail } from '../data/lessons.data';
 import { LessonHeader } from '../components/LessonHeader';
@@ -139,13 +140,23 @@ export const LessonsPage: React.FC = () => {
       setCompletedLessons(updated);
       StorageService.setItem(COMPLETED_LESSONS_KEY, updated);
 
+      // Record real task analytics
+      LearningAnalyticsService.recordActivity({
+        type: 'lesson',
+        title: lesson.title,
+        durationSeconds: Math.max(60, (lesson.estimatedMinutes || 5) * 60),
+        xpEarned: lesson.xpReward || 50,
+        wordsCount: lesson.items?.length || 8,
+        languageCode: courseParam,
+      });
+
       notify({
         type: 'success',
         title: '🎉 Lesson Completed!',
         message: `Outstanding! You mastered "${lesson.title}" and earned +${lesson.xpReward} XP!`,
       });
     }
-  }, [completedLessons, lessonKey, lesson.title, lesson.xpReward, notify]);
+  }, [completedLessons, lessonKey, lesson.title, lesson.xpReward, lesson.estimatedMinutes, lesson.items, courseParam, notify]);
 
   const handleNextLesson = useCallback(() => {
     const nextOrder = lesson.order + 1;
