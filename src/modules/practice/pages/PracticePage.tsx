@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { SpeechService } from '@/services/speech/speech.service';
+import { StorageService } from '@/utils/storage';
 import { getVocabularyForLanguage } from '@/modules/vocabulary/data/vocabulary.data';
 import { SUPPORTED_LANGUAGES } from '@/config/constants';
 import {
@@ -22,6 +23,8 @@ import {
   Mic,
   Headphones,
   Award,
+  Bookmark,
+  BookOpen,
 } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
@@ -130,9 +133,26 @@ export const PracticePage: React.FC = () => {
     );
   }, [courseParam]);
 
-  const deck = useMemo(() => {
+  const [deckScope, setDeckScope] = useState<'all' | 'saved'>('all');
+  const bookmarkedIds = useMemo(() => {
+    return StorageService.getItem<string[]>('bookmarked_vocab', []);
+  }, []);
+
+  const fullDeck = useMemo(() => {
     return getVocabularyForLanguage(courseParam);
   }, [courseParam]);
+
+  const deck = useMemo(() => {
+    if (deckScope === 'saved') {
+      const saved = fullDeck.filter((c) => bookmarkedIds.includes(c.id));
+      if (saved.length > 0) return saved;
+    }
+    return fullDeck;
+  }, [fullDeck, deckScope, bookmarkedIds]);
+
+  const savedCount = useMemo(() => {
+    return fullDeck.filter((c) => bookmarkedIds.includes(c.id)).length;
+  }, [fullDeck, bookmarkedIds]);
 
   const currentCard = deck[currentIndex] || deck[0];
 
@@ -364,6 +384,53 @@ export const PracticePage: React.FC = () => {
           <Headphones className="w-4 h-4" />
           <span>Listening</span>
         </button>
+      </div>
+
+      {/* Vocabulary Notebook Filter (All vs Saved Words) */}
+      <div className="flex items-center justify-between p-2 rounded-2xl bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/60 dark:border-slate-800 text-xs">
+        <span className="font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1.5 pl-1">
+          <BookOpen className="w-3.5 h-3.5 text-blue-500" />
+          <span>Deck Scope:</span>
+        </span>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => {
+              setDeckScope('all');
+              resetSession();
+            }}
+            className={cn(
+              'px-2.5 py-1 rounded-xl font-bold transition text-[11px]',
+              deckScope === 'all'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+            )}
+          >
+            All Words ({fullDeck.length})
+          </button>
+          <button
+            onClick={() => {
+              if (savedCount === 0) {
+                notify({
+                  type: 'info',
+                  title: 'No Saved Words Yet',
+                  message: 'Bookmark words in Vocabulary or during practice to build your custom Notebook deck!',
+                });
+                return;
+              }
+              setDeckScope('saved');
+              resetSession();
+            }}
+            className={cn(
+              'px-2.5 py-1 rounded-xl font-bold transition text-[11px] flex items-center gap-1',
+              deckScope === 'saved'
+                ? 'bg-amber-500 text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+            )}
+          >
+            <Bookmark className="w-3 h-3 fill-current text-amber-300" />
+            <span>My Notebook ({savedCount})</span>
+          </button>
+        </div>
       </div>
 
       {/* Progress & Session Stats */}

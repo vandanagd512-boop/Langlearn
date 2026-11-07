@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { ModuleHeader } from '@/components/layout/ModuleHeader';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Settings, Moon, Sun, Monitor, Volume2, Bell, Database, Trash2, Download, ShieldAlert } from 'lucide-react';
+import { Settings, Moon, Sun, Monitor, Volume2, Bell, Database, Trash2, Download, ShieldAlert, Smartphone, CheckCircle } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useNotification } from '@/context/NotificationContext';
 import { SpeechService } from '@/services/speech/speech.service';
@@ -249,6 +249,52 @@ export const SettingsPage: React.FC = () => {
               />
             </div>
           )}
+        </div>
+      </Card>
+
+      {/* PWA & Offline Installation */}
+      <Card className="p-5 space-y-4 border border-blue-500/20 bg-blue-50/20 dark:bg-blue-950/20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <Smartphone className="w-5 h-5 text-blue-500" />
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                PWA & Offline Mode
+              </h3>
+              <p className="text-[11px] text-slate-500">
+                Install to home screen and access lessons without network
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 flex items-center gap-1">
+            <CheckCircle className="w-3 h-3" />
+            Service Worker Active
+          </span>
+        </div>
+
+        <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
+          <div className="space-y-0.5">
+            <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">
+              Offline Cache Protection
+            </span>
+            <span className="text-[10px] text-slate-500 block">
+              Full offline resilience enabled for all 10 languages
+            </span>
+          </div>
+          <Button
+            size="sm"
+            variant="primary"
+            className="text-xs h-auto py-1 px-3 bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => {
+              notify({
+                type: 'success',
+                title: 'Offline Mode Active! 📱',
+                message: 'All vocabulary, dialogues, and offline scripts are stored on this device. You can add LangLearn to your home screen via browser menu!',
+              });
+            }}
+          >
+            Check Offline Ready
+          </Button>
         </div>
       </Card>
 

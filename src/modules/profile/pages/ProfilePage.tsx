@@ -8,6 +8,7 @@ import { useAppStore } from '@/state/store';
 import { useNotification } from '@/context/NotificationContext';
 import { SUPPORTED_LANGUAGES } from '@/config/constants';
 import { SpeechService } from '@/services/speech/speech.service';
+import { CertificateModal } from '@/components/certificate/CertificateModal';
 import {
   User,
   Mail,
@@ -52,6 +53,7 @@ export const ProfilePage: React.FC = () => {
   const [selectedAvatar, setSelectedAvatar] = useState('👨‍🎓');
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showCertificateModal, setShowCertificateModal] = useState(false);
   const [speechSpeed, setSpeechSpeed] = useState<number>(1.0);
 
   const currentLang =
@@ -348,6 +350,36 @@ export const ProfilePage: React.FC = () => {
         </div>
       </Card>
 
+      {/* Verified Certificate Showcase */}
+      <Card className="p-5 border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-slate-900/5 to-blue-500/10 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Award className="w-5 h-5 text-amber-500" />
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                Official Fluency Certificate
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Verified certificate for mastering {currentLang.name}
+              </p>
+            </div>
+          </div>
+          <Badge variant="amber" size="sm">
+            Official Seal 🏅
+          </Badge>
+        </div>
+
+        <Button
+          variant="primary"
+          size="sm"
+          className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold"
+          leftIcon={<Sparkles className="w-4 h-4" />}
+          onClick={() => setShowCertificateModal(true)}
+        >
+          View & Print Certificate
+        </Button>
+      </Card>
+
       {/* Achievements Showcase */}
       <Card className="p-5 space-y-3">
         <div className="flex items-center justify-between">
@@ -439,6 +471,14 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
       )}
+      {/* Official Certificate Modal */}
+      <CertificateModal
+        isOpen={showCertificateModal}
+        onClose={() => setShowCertificateModal(false)}
+        userName={userName}
+        languageName={currentLang.name}
+        courseTitle={`Foundations of ${currentLang.name} & 20 Real-Life Situations`}
+      />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { useAppStore } from '@/state/store';
 import { HomeHeader } from '../components/HomeHeader';
 import { ContinueLearningCard } from '../components/ContinueLearningCard';
 import { DailyActivityGrid } from '../components/DailyActivityGrid';
+import { DailySpeakingChallengeCard } from '../components/DailySpeakingChallengeCard';
 import { QuickAccessCards } from '../components/QuickAccessCards';
 import { PopularLanguagesSection } from '../components/PopularLanguagesSection';
 import { RecommendedLessonsSection } from '../components/RecommendedLessonsSection';
@@ -82,6 +83,9 @@ export const HomePage: React.FC = () => {
         completedMinutesToday={12}
         todayWord={todayWord}
       />
+
+      {/* 3.5. Daily Speaking Challenge & Streak Shield */}
+      <DailySpeakingChallengeCard />
 
       {/* 4. Quick Access Section (Learn, Translator, Practice, Videos) */}
       <QuickAccessCards />

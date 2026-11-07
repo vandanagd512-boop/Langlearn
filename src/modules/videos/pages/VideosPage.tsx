@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { ALL_VIDEO_LESSONS, REAL_LIFE_CATEGORIES } from '../data/videos.data';
 import { VideoLesson, VideoDurationCategory, VideoProficiencyLevel } from '../types/video.types';
+import { AnimatedCharacterAvatar } from '../components/AnimatedCharacterAvatar';
 import { SpeechService } from '@/services/speech/speech.service';
 import { useNotification } from '@/context/NotificationContext';
 import { useAppStore } from '@/state/store';
@@ -419,47 +420,29 @@ export const VideosPage: React.FC = () => {
 
               {/* Center Flowing Presentation Stage - Dual-Character Stage */}
               <div className="my-auto text-center space-y-2 z-10 px-1">
-                {/* Dual Characters Conversation Duo */}
-                <div className="flex items-center justify-between gap-1 max-w-sm mx-auto px-1 py-1">
+                {/* Dual Characters Conversation Duo with Animated 2D Face Avatars */}
+                <div className="flex items-center justify-between gap-2 max-w-sm mx-auto px-2 py-1">
                   {/* Speaker A (e.g. Ravi) */}
                   <div
-                    className={`flex items-center gap-1.5 p-1.5 rounded-xl transition-all duration-300 ${
+                    className={`p-2 rounded-2xl transition-all duration-300 ${
                       activeSpeakerIndex === 0
-                        ? 'bg-blue-600/50 border border-blue-400 ring-2 ring-blue-400/60 shadow-lg scale-105'
-                        : 'opacity-55 bg-black/40 border border-white/10 scale-95'
+                        ? 'bg-blue-600/40 border border-blue-400 ring-2 ring-blue-400/50 shadow-lg scale-105'
+                        : 'opacity-65 bg-black/40 border border-white/10 scale-95'
                     }`}
                   >
-                    <div className="relative">
-                      <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-xl shadow-md ${
-                          activeSpeakerIndex === 0 ? 'bg-blue-500 animate-pulse' : 'bg-slate-700'
-                        }`}
-                      >
-                        {characterPair.speakerA.avatar}
-                      </div>
-                      {activeSpeakerIndex === 0 && (
-                        <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full animate-ping" />
-                      )}
-                    </div>
-                    <div className="text-left leading-tight">
-                      <div className="flex items-center gap-1">
-                        <span className="text-[11px] font-black text-white">{characterPair.speakerA.name}</span>
-                        {activeSpeakerIndex === 0 && (
-                          <span className="text-[7px] bg-blue-500 text-white font-extrabold px-1 py-0.2 rounded uppercase">
-                            Speaking
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[9px] text-white/70 block truncate max-w-[70px]">
-                        {characterPair.speakerA.role}
-                      </span>
-                    </div>
+                    <AnimatedCharacterAvatar
+                      character={characterPair.speakerA}
+                      isSpeaking={activeSpeakerIndex === 0}
+                      isListening={activeSpeakerIndex === 1}
+                      voiceToneLabel="Deep Tone"
+                      size="md"
+                    />
                   </div>
 
                   {/* Center Voice Wave & Turn Indicator */}
                   <div className="flex flex-col items-center justify-center px-1">
-                    <div className="flex items-center gap-0.5 h-3">
-                      {[40, 80, 50, 90, 60].map((h, i) => (
+                    <div className="flex items-center gap-0.5 h-3.5">
+                      {[40, 80, 50, 95, 60].map((h, i) => (
                         <span
                           key={i}
                           className={`w-0.5 rounded-full ${
@@ -473,44 +456,29 @@ export const VideosPage: React.FC = () => {
                         />
                       ))}
                     </div>
-                    <span className="text-[8px] font-extrabold text-amber-300 uppercase tracking-wider mt-0.5">
+                    <span className="text-[9px] font-black text-amber-300 uppercase tracking-wider mt-1">
                       Turn {activeSentenceIndex + 1}/{totalSentences}
+                    </span>
+                    <span className="text-[7px] text-white/60 font-mono">
+                      {activeSpeakerIndex === 0 ? 'Voice #1' : 'Voice #2'}
                     </span>
                   </div>
 
                   {/* Speaker B (e.g. Arun) */}
                   <div
-                    className={`flex items-center gap-1.5 p-1.5 rounded-xl transition-all duration-300 ${
+                    className={`p-2 rounded-2xl transition-all duration-300 ${
                       activeSpeakerIndex === 1
-                        ? 'bg-emerald-600/50 border border-emerald-400 ring-2 ring-emerald-400/60 shadow-lg scale-105'
-                        : 'opacity-55 bg-black/40 border border-white/10 scale-95'
+                        ? 'bg-emerald-600/40 border border-emerald-400 ring-2 ring-emerald-400/50 shadow-lg scale-105'
+                        : 'opacity-65 bg-black/40 border border-white/10 scale-95'
                     }`}
                   >
-                    <div className="text-right leading-tight">
-                      <div className="flex items-center justify-end gap-1">
-                        {activeSpeakerIndex === 1 && (
-                          <span className="text-[7px] bg-emerald-500 text-white font-extrabold px-1 py-0.2 rounded uppercase">
-                            Replying
-                          </span>
-                        )}
-                        <span className="text-[11px] font-black text-white">{characterPair.speakerB.name}</span>
-                      </div>
-                      <span className="text-[9px] text-white/70 block truncate max-w-[70px]">
-                        {characterPair.speakerB.role}
-                      </span>
-                    </div>
-                    <div className="relative">
-                      <div
-                        className={`w-9 h-9 rounded-xl flex items-center justify-center text-xl shadow-md ${
-                          activeSpeakerIndex === 1 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-700'
-                        }`}
-                      >
-                        {characterPair.speakerB.avatar}
-                      </div>
-                      {activeSpeakerIndex === 1 && (
-                        <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full animate-ping" />
-                      )}
-                    </div>
+                    <AnimatedCharacterAvatar
+                      character={characterPair.speakerB}
+                      isSpeaking={activeSpeakerIndex === 1}
+                      isListening={activeSpeakerIndex === 0}
+                      voiceToneLabel="Bright Tone"
+                      size="md"
+                    />
                   </div>
                 </div>
 
