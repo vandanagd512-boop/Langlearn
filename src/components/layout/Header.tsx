@@ -54,14 +54,15 @@ export const Header: React.FC = () => {
             </span>
           </div>
 
-          {/* Streak Badge */}
-          <div
-            className="flex items-center gap-1 px-2 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40 text-[11px] font-bold"
-            title="Daily Learning Streak"
+          {/* Streak & Analytics Quick Link */}
+          <Link
+            to="/progress"
+            className="flex items-center gap-1 px-2 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200/60 dark:border-amber-900/40 text-[11px] font-bold hover:scale-105 active:scale-95 transition cursor-pointer"
+            title="Learning Analytics & Daily Activity Tracker"
           >
             <Flame className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
             <span>{user?.streakDays ?? 3}d</span>
-          </div>
+          </Link>
 
           {/* Leaderboard Trophy Link */}
           <Link

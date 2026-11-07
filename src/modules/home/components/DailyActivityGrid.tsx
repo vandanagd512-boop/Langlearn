@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { ProgressBar } from '@/components/ui/ProgressBar';
-import { Flame, Zap, Volume2, Trophy, Sparkles } from 'lucide-react';
+import { Flame, Zap, Volume2, Trophy, Sparkles, BarChart2 } from 'lucide-react';
 import { DailyWord } from '../types/home.types';
 import { SpeechService } from '@/services/speech/speech.service';
 import { useNotification } from '@/context/NotificationContext';
@@ -22,6 +23,7 @@ export const DailyActivityGrid: React.FC<DailyActivityGridProps> = ({
   completedMinutesToday,
   todayWord,
 }) => {
+  const navigate = useNavigate();
   const { notify } = useNotification();
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
@@ -47,12 +49,16 @@ export const DailyActivityGrid: React.FC<DailyActivityGridProps> = ({
   return (
     <div className="grid grid-cols-2 gap-3">
       {/* 1. Daily Streak Card */}
-      <Card className="p-4 flex flex-col justify-between space-y-3">
+      <Card
+        onClick={() => navigate('/progress')}
+        className="p-4 flex flex-col justify-between space-y-3 cursor-pointer hover:border-amber-400/80 dark:hover:border-amber-600 transition active:scale-[0.98] group"
+        title="View Learning Analytics & Streak History"
+      >
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            Streak
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-amber-500 transition-colors">
+            Streak • Analytics
           </span>
-          <div className="w-7 h-7 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform">
             <Flame className="w-4 h-4 fill-amber-500 animate-pulse" />
           </div>
         </div>
@@ -62,13 +68,16 @@ export const DailyActivityGrid: React.FC<DailyActivityGridProps> = ({
             {streakDays} <span className="text-xs font-bold text-slate-400">Days</span>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-            Top 10% active
+            Top 10% active • Tap to view
           </p>
         </div>
 
-        <div className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold bg-amber-50/70 dark:bg-amber-950/40 px-2 py-1.5 rounded-xl flex items-center gap-1">
-          <Sparkles className="w-3 h-3 shrink-0" />
-          <span className="truncate">Aim for {streakDays + 1} days!</span>
+        <div className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold bg-amber-50/70 dark:bg-amber-950/40 px-2 py-1.5 rounded-xl flex items-center justify-between">
+          <span className="flex items-center gap-1 truncate">
+            <Sparkles className="w-3 h-3 shrink-0" />
+            <span className="truncate">Aim for {streakDays + 1} days!</span>
+          </span>
+          <BarChart2 className="w-3 h-3 shrink-0 opacity-70 group-hover:opacity-100" />
         </div>
       </Card>
 
@@ -104,9 +113,13 @@ export const DailyActivityGrid: React.FC<DailyActivityGridProps> = ({
       </Card>
 
       {/* 3. Daily Goal Progress Card */}
-      <Card className="p-4 flex flex-col justify-between space-y-3">
+      <Card
+        onClick={() => navigate('/progress')}
+        className="p-4 flex flex-col justify-between space-y-3 cursor-pointer hover:border-blue-400/80 dark:hover:border-blue-600 transition active:scale-[0.98] group"
+        title="View Daily Goal Learning Analytics"
+      >
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-blue-500 transition-colors">
             Daily Goal
           </span>
           <Badge variant={goalProgressPercent >= 100 ? 'green' : 'blue'} size="sm" className="text-[9px] px-1.5 py-0.5">

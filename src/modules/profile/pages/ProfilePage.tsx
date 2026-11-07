@@ -24,6 +24,8 @@ import {
   Volume2,
   Sparkles,
   BookOpen,
+  BarChart3,
+  ArrowRight,
 } from 'lucide-react';
 
 const AVATAR_OPTIONS = ['👨‍🎓', '👩‍🎓', '🧑‍💻', '👩‍🏫', '🦁', '🚀', '🎯', '🌟'];
@@ -234,6 +236,33 @@ export const ProfilePage: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Direct Link to Learning Analytics Dashboard */}
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+          <button
+            type="button"
+            onClick={() => navigate('/progress')}
+            className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-200/80 dark:border-blue-900/60 hover:border-blue-400 dark:hover:border-blue-700 transition group text-left cursor-pointer active:scale-[0.99]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform shrink-0">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                  <span>Learning Analytics Dashboard</span>
+                  <Badge variant="blue" size="sm" className="text-[9px] px-1.5 py-0.2">
+                    Live
+                  </Badge>
+                </div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                  Real-time study hours, daily chart & completed task log
+                </div>
+              </div>
+            </div>
+            <ArrowRight className="w-4 h-4 text-blue-600 dark:text-blue-400 group-hover:translate-x-1 transition-transform shrink-0" />
+          </button>
         </div>
       </Card>
 
