@@ -136,6 +136,19 @@ export const PracticePage: React.FC = () => {
 
   const currentCard = deck[currentIndex] || deck[0];
 
+  // Dynamically generate 4 choices (1 correct + 3 real vocabulary distractors from the active deck)
+  const listeningOptions = useMemo(() => {
+    if (!currentCard) return [];
+    const otherMeanings = deck
+      .filter((c) => c.meaning !== currentCard.meaning)
+      .map((c) => c.meaning);
+
+    const shuffledOthers = [...otherMeanings].sort(() => 0.5 - Math.random()).slice(0, 3);
+    const options = [currentCard.meaning, ...shuffledOthers];
+
+    return options.sort(() => 0.5 - Math.random());
+  }, [currentCard, deck]);
+
   const handleSpeak = (text: string, e?: React.MouseEvent) => {
     e?.stopPropagation();
     SpeechService.speak(text, currentCard.audioLangCode);
@@ -660,16 +673,9 @@ export const PracticePage: React.FC = () => {
 
           {/* 4 Choices */}
           <div className="grid grid-cols-1 gap-2.5 pt-2">
-            {[
-              currentCard.meaning,
-              'To leave quickly without notice',
-              'A traditional sweet dessert',
-              'Marketplace direction indicator',
-            ]
-              .sort(() => 0.5 - Math.random())
-              .map((opt, idx) => {
-                const isSelected = selectedListeningOption === idx;
-                const isCorrect = opt === currentCard.meaning;
+            {listeningOptions.map((opt, idx) => {
+              const isSelected = selectedListeningOption === idx;
+              const isCorrect = opt === currentCard.meaning;
 
                 return (
                   <button

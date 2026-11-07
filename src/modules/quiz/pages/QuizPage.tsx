@@ -156,6 +156,106 @@ export const QuizPage: React.FC = () => {
       ];
     }
 
+    if (courseParam === 'te') {
+      return [
+        {
+          id: 1,
+          type: 'translation',
+          prompt: 'What is the correct meaning of "నమస్కారం" (Namaskaram)?',
+          sentence: 'అందరికీ నమస్కారం, బాగున్నారా?',
+          options: ['Goodbye', 'Hello / Respectful Greetings', 'Thank you', 'Where to go'],
+          correctIndex: 1,
+          explanation: '"Namaskaram" is the classic polite greeting across Andhra Pradesh and Telangana.',
+        },
+        {
+          id: 2,
+          type: 'fill_blank',
+          prompt: 'Choose the correct word to complete the question:',
+          sentence: 'మీ పేరు _____? (What is your name?)',
+          options: ['ఎక్కడ (Where)', 'ఏమిటి (What)', 'ఎప్పుడు (When)', 'ఎందుకు (Why)'],
+          correctIndex: 1,
+          explanation: '"Mee peru emiti?" is the standard polite phrase for asking someone their name.',
+        },
+        {
+          id: 3,
+          type: 'audio',
+          prompt: 'Listen to the audio clip and select the word you hear:',
+          audioText: 'ధన్యవాదాలు',
+          options: ['ధన్యవాదాలు (Thank you)', 'నమస్కారం (Hello)', 'భోజనం (Meal)', 'శుభోదయం (Good morning)'],
+          correctIndex: 0,
+          explanation: 'The spoken phrase was "Dhanyavadalu", expressing heartfelt gratitude.',
+        },
+        {
+          id: 4,
+          type: 'culture',
+          prompt: 'Which honorific suffix is added to names in Telugu to show deep respect?',
+          sentence: 'Ramesh + [_____] = Respectful address',
+          options: ['-Ji', '-re', '-Garu (-గారు)', '-da'],
+          correctIndex: 2,
+          explanation: 'The honorific suffix "-Garu" (e.g., Ramesh Garu) is universally used to denote respect in Telugu.',
+        },
+        {
+          id: 5,
+          type: 'translation',
+          prompt: 'What does "భోజనం" (Bhojanam) mean in daily life?',
+          sentence: 'మీరు భోజనం చేశారా? (Did you eat your meal?)',
+          options: ['Travel ticket', 'Full meal / Food', 'Market bill', 'Office task'],
+          correctIndex: 1,
+          explanation: '"Bhojanam" means a proper meal or food, central to everyday hospitality.',
+        },
+      ];
+    }
+
+    if (courseParam === 'ta') {
+      return [
+        {
+          id: 1,
+          type: 'translation',
+          prompt: 'What is the correct meaning of "வணக்கம்" (Vanakkam)?',
+          sentence: 'அனைவருக்கும் வணக்கம்!',
+          options: ['Goodbye', 'Hello / Respectful Greetings', 'Please sit', 'I am leaving'],
+          correctIndex: 1,
+          explanation: '"Vanakkam" is the traditional respectful Tamil greeting with folded hands.',
+        },
+        {
+          id: 2,
+          type: 'fill_blank',
+          prompt: 'Complete the sentence with the polite Tamil question word:',
+          sentence: 'உங்கள் பெயர் _____? (What is your name?)',
+          options: ['எங்கு (Where)', 'என்ன (What)', 'எப்போது (When)', 'எப்படி (How)'],
+          correctIndex: 1,
+          explanation: '"Ungal peyar enna?" is the polite question for asking someone their name.',
+        },
+        {
+          id: 3,
+          type: 'audio',
+          prompt: 'Listen to the audio clip and select the word you hear:',
+          audioText: 'நன்றி',
+          options: ['நன்றி (Thank you)', 'வணக்கம் (Hello)', 'காலை வணக்கம் (Good morning)', 'வாருங்கள் (Welcome)'],
+          correctIndex: 0,
+          explanation: 'The audio clip said "Nandri", expressing sincere gratitude in Tamil.',
+        },
+        {
+          id: 4,
+          type: 'culture',
+          prompt: 'Which caring phrase is affectionately asked to inquire about well-being?',
+          sentence: 'நேரத்திற்கு _____? (Did you have food on time?)',
+          options: ['சாப்பிட்டீங்களா (Did you eat?)', 'தூங்கினீர்களா (Did you sleep?)', 'படித்தீர்களா (Did you read?)', 'சென்றீர்களா (Did you go?)'],
+          correctIndex: 0,
+          explanation: 'Asking "Sappitteengala?" (Did you eat?) is the signature Tamil way to express care.',
+        },
+        {
+          id: 5,
+          type: 'translation',
+          prompt: 'What does "தண்ணீர்" (Thanneer) mean when dining?',
+          sentence: 'கொஞ்சம் தண்ணீர் கொடுங்கள் (Please give water).',
+          options: ['Hot Tea', 'Water', 'Filter Coffee', 'Rice'],
+          correctIndex: 1,
+          explanation: '"Thanneer" means water in Tamil.',
+        },
+      ];
+    }
+
     // Default Kannada & other languages
     return [
       {
